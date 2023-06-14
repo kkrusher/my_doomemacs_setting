@@ -186,8 +186,8 @@
   (setq org-refile-targets `(
                              (nil :maxlevel . 1)
                              (org-agenda-files :maxlevel . 1)
-                             (,(directory-files-recursively "/Users/k/OneDrive - nudt.edu.cn/org-notes/" "^[a-z0-9]*.org$") :maxlevel . 1)
-                             ;; (,(directory-files-recursively org-directory "^[a-z0-9]*.org$") :maxlevel . 2)
+                             ;; (,(directory-files-recursively "/Users/k/OneDrive - nudt.edu.cn/org-notes/" "^[a-z0-9]*.org$") :maxlevel . 1)
+                             (,(directory-files-recursively org-directory "^[a-z0-9]*.org$") :maxlevel . 1)
                              ))
 
   (setq org-capture-templates
