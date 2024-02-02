@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: underline
+# key: _
+# group: org-mode formatting
+# --
+_`%`${1:文字}_$0

@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: #+begin_src rst
+# key: <rst
+# condition: t
+# --
+#+begin_src rst
+`%`$0
+#+end_src

@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: #+begin_src lua
+# key: <lua
+# condition: t
+# --
+#+begin_src lua
+`%`$0
+#+end_src

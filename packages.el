@@ -52,6 +52,10 @@
 
 ;;(package! org-roam)
 
+;; pinned version of org mode have bugs
+(unpin! org)
+
+
 (package! ivy-bibtex)
 
 (package! org-ref)
@@ -74,3 +78,22 @@
   :recipe (:host github :repo "joshcho/ChatGPT.el" :files ("dist" "*.el")))
 
 ;; (package! org-download)
+
+(package! ebdb)
+
+
+(package! org-web-tools)
+
+
+(package! org-pandoc-import
+  :recipe (:host github
+           :repo "tecosaur/org-pandoc-import"
+           :files ("*.el" "filters" "preprocessors")))
+
+(package! org-modern)
+
+
+(package! sis
+  :recipe (:host github
+           :repo "laishulu/emacs-smart-input-source"
+           :files ("*.el")))

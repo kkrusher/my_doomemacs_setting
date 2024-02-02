@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: #+begin_src makefile
+# key: <makefile
+# condition: t
+# --
+#+begin_src makefile
+`%`$0
+#+end_src

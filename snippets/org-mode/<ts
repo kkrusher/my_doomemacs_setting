@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: #+begin_src typescript ts
+# key: <ts
+# condition: t
+# --
+#+begin_src typescript
+`%`$0
+#+end_src

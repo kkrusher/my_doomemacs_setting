@@ -45,7 +45,8 @@
 ;; If you use `org' and don't want your org files in the default location below,
 ;; change `org-directory'. It must be set before org loads!
 ;; (setq org-directory "~/org/")
-(setq org-directory "/Users/k/OneDrive - nudt.edu.cn/org-notes/")
+
+
 
 ;; Whenever you reconfigure a package, make sure to wrap your config in an
 ;; `after!' block, otherwise Doom's defaults may override your settings. E.g.
@@ -79,45 +80,20 @@
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
 
+;; maximize the window on initialization
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
 
-;; tjk's private config
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; add scroll bar
+(scroll-bar-mode 1)
 
-;; be careful
-;; maybe not work and have side effects
-;; to solve the problem of too slow org-table-align
-;; https://github.com/emacs-evil/evil/issues/1623
-(advice-remove 'set-window-buffer #'ad-Advice-set-window-buffer)
+;; disable confirm exit
+(setq confirm-kill-emacs nil)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; to support select and move by mouse
+(setq mouse-drag-and-drop-region t)
 
-;; Kicked out of insert mode when typing 'fd' quickly
-;; https://github.com/doomemacs/doomemacs/issues/1946
-(after! evil-escape
-  (setq-default evil-escape-key-sequence "fd"))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
-;; add a key binding to treemacs select window
-(map! :after treemacs
-      "C-w C-1" #'treemacs-select-window)
-
-;; start treemacs on emacs startup
-(add-hook 'window-setup-hook #'treemacs 'append)
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+;; auto-save-mode is somewhat a backup in temporary file named #<file_name>#, auto-save-visited-mode is actually auto save on related file
+(auto-save-visited-mode +1)
 
 ;; solve the problem of 'Cmd-x raise M-x rather than cut' problem
 ;; https://github.com/doomemacs/doomemacs/issues/3860
@@ -126,46 +102,174 @@
   (interactive "r")
   (copy-region-as-kill beg end)
   (delete-region beg end))
-
 (map! "s-x" #'cut-region)
 
+;; load sessions from last leave
+;; cuurently have bugs, use "SPC q L" instead
+;; (add-hook! 'window-setup-hook #'doom/quickload-session)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; set undo
+(global-set-key (kbd "C-z") 'undo)
 
-;; ;;org
+(map! :g "s-w"       #'kill-this-buffer)
 
-;; Information to record when a task is refiled.
-(setq! org-log-refile 'time)
+;;  SPC f f 默认搜索当前buffer所在的目录，这里更改成搜索当前buffer所在的project
+(map! :leader
+      :desc "Find file in project" "f f" #'projectile-find-file)
+
+(setq doom-leader-key "M-SPC"
+      doom-localleader-key "M-SPC m")
+
+;; open "M-x" by "M-SPC M-SPC"
+(map! :leader
+      :desc "Open like spacemacs" "M-SPC" #'execute-extended-command)
+
+(setq org-directory "/Users/k/my_org-files/")
+
+(setq +jk/onedrive-directory "/Users/k/OneDrive - nudt.edu.cn/")
+
+(setq +jk/doom-directory "/Users/k/.config/doom/")
+(setq +jk/doom-config-el (concat +jk/doom-directory "/config.el"))
+(setq +jk/doom-config-org (concat org-directory "/config.org"))
+
+;; (setq +jk/agenda-directory (concat  org-directory "/agenda/"))
+(setq +jk/agenda-directory org-directory)
+(setq +jk/org-capture-inbox-file (concat org-directory "/agenda/inbox.org"))
+
+(setq +jk/org-roam-directory org-directory )
+(setq +jk/resources-directory (concat org-directory "/resources/"))
+(setq +jk/bibtex-file (concat +jk/resources-directory "/MyLibrary.bib"))
+(setq +jk/bibtex-pdf-file-directory (concat +jk/onedrive-directory "/Zotero/"))
+(setq +jk/paper-notes-directory (concat +jk/org-roam-directory "paper_notes/"))
+
+;; Kicked out of insert mode when typing 'fd' quickly
+;; https://github.com/doomemacs/doomemacs/issues/1946
+(after! evil-escape
+  (setq-default evil-escape-key-sequence "fd"))
+
+;; https://github.com/doomemacs/doomemacs/issues/3108
+(after! gcmh
+  (setq gcmh-high-cons-threshold 33554432))
+
+;; 设置中文字体
+;; https://emacs-china.org/t/doom-emacs/23513/8
+(defun my-cjk-font()
+  (dolist (charset '(kana han cjk-misc symbol bopomofo))
+    (set-fontset-font t charset (font-spec :family "STKaiti"))))
+
+(add-hook 'after-setting-font-hook #'my-cjk-font)
+
+;; 测试： 将 直 言 判
+
+(setq org-emphasis-regexp-components
+      '("-[:multibyte:][:space:]('\"{"
+        "-[:multibyte:][:space:].,:!?;'\")}\\["
+        "[:space:]"
+        "."
+        1))
+(after! org
+  (org-set-emph-re 'org-emphasis-regexp-components org-emphasis-regexp-components)
+  (org-element-update-syntax)
+  )
+
+;; Automatically tangle our Emacs.org config file when we save it
+(defun efs/org-babel-tangle-config ()
+  (when (string-equal (buffer-file-name)
+                      (expand-file-name +jk/doom-config-org))
+    ;; Dynamic scoping to the rescue
+    (let ((org-confirm-babel-evaluate nil))
+      (org-babel-tangle))))
+
+(add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
+
+(after! treemacs
+
+  ;;(map! "<f11>" #'treemacs)
+  ;; add a key binding to treemacs select window
+  (map! :leader
+        "w p" #'treemacs-select-window)
+  (setq treemacs-sorting 'mod-time-desc)
+  (setq treemacs-tag-follow-mode t)
+  )
+
+;; start treemacs on emacs startup
+;; (add-hook! 'window-setup-hook #'treemacs 'append)
+(add-hook! 'window-setup-hook #'treemacs)
 
 (after! org
+
+  ;; 该功能允许在创建到 Org 文件或标题的链接时自动使用 ID。这意味着当你在 Org mode 中创建到另一个 Org 文件或某个特定标题的链接时，会自动生成并使用一个唯一 ID 作为链接的目标，而不是使用文件名和标题。
   (setq org-id-link-to-org-use-id t)
-  ;;      ;; add an option to 'C-c C-,' for new template
-  (add-to-list 'org-structure-template-alist '("R" . "src R"))
-  (add-to-list 'org-structure-template-alist '("L" . "src emacs-lisp"))
-  (add-to-list 'org-structure-template-alist '("P" . "src python"))
-  (add-to-list 'org-structure-template-alist '("J" . "src json"))
+  ;; replaced by snippets
+  ;; add an option to 'C-c C-,' for new template
+  ;; (add-to-list 'org-structure-template-alist '("R" . "src R"))
+  ;; (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
+  ;; (add-to-list 'org-structure-template-alist '("py" . "src python"))
+  ;; (add-to-list 'org-structure-template-alist '("" . "src json"))
 
-  (add-to-list 'org-latex-packages-alist '("" "tcolorbox" t))
-  (add-to-list 'org-latex-packages-alist '("" "amsmath" t))
-  (add-to-list 'org-latex-packages-alist '("" "amsfonts" t))
-  (add-to-list 'org-latex-packages-alist '("" "bm" t))
-  (add-to-list 'org-latex-packages-alist '("" "hyperref" t))
-  (add-to-list 'org-latex-packages-alist '("" "verbatim" t))
-  (add-to-list 'org-latex-packages-alist '("" "array" t))
-  (add-to-list 'org-latex-packages-alist '("" "float" t))
-  (add-to-list 'org-latex-packages-alist '("" "makecell" t))
-  (add-to-list 'org-latex-packages-alist '("" "mathtools" t))
-  (add-to-list 'org-latex-packages-alist '("" "braket" t))
-  (add-to-list 'org-latex-packages-alist '("" "url" t))
-  (add-to-list 'org-latex-packages-alist '("" "subfig" t))
+  ;; 添加一个设置来确保每次打开 Org 文件时都启用内嵌图片的显示
+  ;; 无需每个文件单独设置 #+STARTUP: inlineimages
+  ;; 但是打开这个选项，当attachment中有除了图片以为的附件时，显示会出问题
+  ;; (setq org-startup-with-inline-images t)
 
+  )
+
+(after! org
+  (setq org-file-apps
+        '((remote . emacs)
+          (system . "open %s")
+          ("ps.gz" . "gv %s")
+          ("eps.gz" . "gv %s")
+          ("dvi" . "xdvi %s")
+          ("fig" . "xfig %s")
+          (t . "open %s")))
+  ;;  (setq org-file-apps org-file-apps-macosx)
+  )
+
+(after! org
+  (setq word-wrap-by-category t)
+  )
+
+(after! org-download
+  ;; doom 设置的默认值为"_%Y%m%d_%H%M%S"
+  (setq org-download-timestamp "_%Y%m%d_")
+  )
+
+(with-eval-after-load 'org
+  (remove-hook 'org-tab-first-hook #'+org-indent-maybe-h)
+  )
+
+(after! org
   ;; when archive a subtree with inherited tags, add the inherited tags to the subtree after archive
   (setq org-archive-subtree-add-inherited-tags t)
 
-  ;;      (setq org-todo-keywords
-  ;;            '((sequence "TODO(t!)" "WAITING(w!)" "SOMEDAY(s!)" "|" "DONE(d@)" "CANCELED(c@)")))
+  ;; Information to record when a task is refiled.
+  ;; (setq org-log-refile 'time)
+
+  ;; default value of org-refile-targets is
+  ;; ((nil :maxlevel . 3)
+  ;;  (org-agenda-files :maxlevel . 3))
+  ;;  but I want all org files in org-directory
+  (setq org-refile-targets `(
+                             (nil :maxlevel . 1)
+                             (org-agenda-files :maxlevel . 1)
+                             (,(directory-files-recursively org-directory "^[a-z0-9]*.org$") :maxlevel . 1)
+                             (,(directory-files-recursively +jk/doom-directory "^[a-z0-9]*.org$") :maxlevel . 1)
+                             ))
+
+  (setq org-reverse-note-order t)
+  )
+
+(after! org
+  ;; (setq org-todo-keywords
+  ;;       '((sequence "TODO(t)" "PROJ(p)" "LOOP(r)" "STRT(s!)" "WAIT(w@/!)" "HOLD(h)" "IDEA(i)" "|" "DONE(d!)" "KILL(k@)")
+  ;;         (sequence "[ ](T)" "[-](N)" "[?](W@/!)" "|" "[X](D!)")
+  ;;         (sequence "|" "OKAY(o)" "YES(y)" "NO(n)"))
+  ;;       )
+  (setq org-todo-keywords
+        '((sequence "TODO(t)" "PROJ(p)" "LOOP(r)" "NEXT(n)" "WAIT(w@/!)" "HOLD(h)" "IDEA(i)" "|" "DONE(d!)" "KILL(k@)")
+          )
+        )
 
   ;;default tag list
   (setq org-tag-alist '(("@work" . ?w)
@@ -178,45 +282,183 @@
                         ("python" . ?P)
                         ("shell". ?S)
                         ))
+  )
 
-  ;; default value of org-refile-targets is
-  ;; ((nil :maxlevel . 3)
-  ;;  (org-agenda-files :maxlevel . 3))
-  ;;  but I want all org files in org-directory
-  (setq org-refile-targets `(
-                             (nil :maxlevel . 1)
-                             (org-agenda-files :maxlevel . 1)
-                             ;; (,(directory-files-recursively "/Users/k/OneDrive - nudt.edu.cn/org-notes/" "^[a-z0-9]*.org$") :maxlevel . 1)
-                             (,(directory-files-recursively org-directory "^[a-z0-9]*.org$") :maxlevel . 1)
-                             ))
-
+(after! org
   (setq org-capture-templates
         '(("t" "Personal todo" entry
-           (file+headline +org-capture-todo-file "Inbox")
-           "* [ ] %?\n%i\n%a" :prepend t)
-          ("n" "Personal notes" entry
-           (file+headline +org-capture-todo-file "Inbox")
-           "* %u %?\n%i\n%a" :prepend t)
+           (file +jk/org-capture-inbox-file)
+           "* TODO %u %? \n %i" :prepend t :empty-lines-after 2)
           ("r" "To be read" entry
-           (file+headline +org-capture-todo-file "To be read")
-           "* %u Paper title: %?\n%i\n%a" :prepend t)
+           (file +jk/org-capture-inbox-file)
+           "* TODO %u Paper title: %?\n %i \n" :prepend t :empty-lines-after 2)
+          ("i" "Interrupted" entry
+           (file +jk/org-capture-inbox-file)
+           "* TODO %u %? \n %i" :prepend t :clock-in t :clock-resume t :empty-lines-after 2)
           ))
-
+  ;; (setq org-tab-first-hook '(+org-yas-expand-maybe-h
+  ;;                          org-babel-hide-result-toggle-maybe
+  ;;                          org-babel-header-arg-expand
+  ;;                          +org-clear-babel-results-h
+  ;;                          +org-cycle-only-current-subtree-h)'
+  ;;        )
 
   )
 
+(after! org
+  ;; (setq org-agenda-files (list +jk/agenda-directory))
+  ;; (setq org-agenda-files (directory-files-recursively +jk/agenda-directory "org$"))
+  (setq org-agenda-files (directory-files-recursively org-directory "org$"))
+  ;; "org$"是用来匹配文件名以"org"结尾的正则表达式，即查找所有Org文件（.org扩展名）
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (map! "<f1>" #'org-agenda)
+
+  ;; The initial value of follow mode in a newly created agenda window.
+  ;; evil 开启的情况下，只有使用jk作为方向键换行的时候才会跟随，使用方向键不会跟随
+  (setq org-agenda-start-with-follow-mode t)
+
+  ;; (setq org-stuck-projects '("+TODO=\"PROJ\"/-DONE" ("NEXT" "[-]") nil ""))
+  (setq org-stuck-projects '("/-DONE" ("NEXT" "[-]") nil ""))
+  (setq org-agenda-custom-commands
+        '(
+          ("w" "Tasks waiting for someone"
+           ((todo "WAIT"
+                  ((org-agenda-overriding-header "👂 Tasks waiting for someone:\n")))))
 
 
-(setq +jk/org-roam-directory (concat org-directory "roam/"))
-(setq +jk/bibtex-directory (concat org-directory "bib_file/"))
-(setq +jk/bibtex-file (concat +jk/bibtex-directory "MyLibrary.bib"))
-(setq +jk/bibtex-pdf-file-directory (concat +jk/bibtex-directory "bibtex-pdfs/MyLibrary.bib"))
-(setq +jk/paper-notes-directory (concat +jk/org-roam-directory "paper_notes/"))
+          ("W" "Agendas for the past 7 days"
+           ((agenda "Past 7 days"
+                    ((org-agenda-overriding-header "Agendas for the past 7 days:\n")
+                     (org-agenda-start-day "-7d")
+                     (org-agenda-span 7)))))
 
+          ;; ("c" "Custom view"
+          ;;  ((agenda ""
+          ;;         ((org-agenda-overriding-header "今日未完成的项目")
+          ;;          (org-agenda-start-day "+0d")
+          ;;          (org-agenda-span 'day)
+          ;;          (org-agenda-skip-function
+          ;;           '(org-agenda-skip-entry-if 'todo 'done))))
+          ;;   (todo "TODO"
+          ;;       ((org-agenda-overriding-header "所有未完成的项目")
+          ;;        (org-agenda-skip-function
+          ;;         '(org-agenda-skip-if nil '(scheduled deadline)))))))
+
+          ("u" "Unscheduled TODO" todo "TODO"
+           ((org-agenda-todo-ignore-scheduled 'all)
+            (org-agenda-todo-ignore-deadlines 'all)
+            (org-agenda-todo-ignore-with-date 'all)
+            (org-agenda-sorting-strategy
+             '(category-keep))))
+
+
+          ("A" "Daily agenda and top priority tasks"
+           ((tags-todo "*"
+                       ((org-agenda-skip-function '(org-agenda-skip-if nil '(timestamp)))
+                        (org-agenda-skip-function
+                         `(org-agenda-skip-entry-if
+                           'notregexp ,(format "\\[#%s\\]" (char-to-string org-priority-highest))))
+                        (org-agenda-block-separator nil)
+                        (org-agenda-overriding-header "Important tasks without a date:\n")))
+            (agenda "" ((org-agenda-start-day "+0d")
+                        (org-agenda-span 1)
+                        (org-deadline-warning-days 0)
+                        (org-agenda-block-separator ?*)
+                        (org-scheduled-past-days 100000) ;; 显示过去100000天（所有）的计划
+                        ;; We don't need the `org-agenda-date-today'
+                        ;; highlight because that only has a practical
+                        ;; utility in multi-day views.
+                        (org-agenda-day-face-function (lambda (date) 'org-agenda-date))
+                        (org-agenda-format-date "%A %-e %B %Y")
+                        (org-agenda-overriding-header "Today's agenda:\n")))
+            (agenda "" ((org-agenda-start-on-weekday nil)
+                        (org-agenda-start-day "+1d")
+                        (org-agenda-span 3)
+                        (org-deadline-warning-days 0)
+                        (org-agenda-block-separator ?*)
+                        (org-agenda-skip-function '(org-agenda-skip-entry-if 'todo 'done))
+                        (org-agenda-overriding-header "Next three days:\n")))
+            (agenda "" ((org-agenda-time-grid nil)
+                        (org-agenda-start-on-weekday nil)
+                        ;; We don't want to replicate the previous section's
+                        ;; three days, so we start counting from the day after.
+                        (org-agenda-start-day "+4d")
+                        (org-agenda-span 14)
+                        (org-agenda-show-all-dates ?*)
+                        (org-deadline-warning-days 0)
+                        (org-agenda-block-separator ?*)
+                        ;; (org-agenda-entry-types '(:deadline))
+                        (org-agenda-skip-function '(org-agenda-skip-entry-if 'todo 'done))
+                        ;; (org-agenda-overriding-header "Upcoming deadlines (+14d):")))))
+                        (org-agenda-overriding-header "Upcoming +14d:")))))
+
+          ))
+
+  ;; 打开emacs 显示自定义的agenda view
+  (add-hook 'emacs-startup-hook
+            (lambda ()
+              (org-agenda nil "A")
+              (delete-other-windows)))
+
+  ;; 设置agenda自动显示时间统计报告
+  (setq org-agenda-start-with-clockreport-mode t)
+
+  ;; 设置org-agenda-clockreport-mode
+  (setq org-agenda-clockreport-parameter-plist '(:scope agenda-with-archives :stepskip0 t :link t :maxlevel 3 :fileskip0 t :formula % :hidefiles t))
+
+  )
+
+(after! org
+  (setq org-roam-directory org-directory)
+  ;; (setq org-roam-directory "/Users/k/OneDrive - nudt.edu.cn/org-notes/RoamNotes")
+  (setq org-roam-index-file (concat +jk/org-roam-directory "index.org"))
+  ;; (setq org-roam-index-file "/Users/k/OneDrive - nudt.edu.cn/org-notes/RoamNotes/index.org")
+  ;; 使org agenda显示.org_archive文件中的todo entry
+  (setq org-agenda-archives-mode t)
+  )
+
+
+
+
+(use-package! org-roam-ui
+  :after org-roam
+  ;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
+  ;;         a hookable mode anymore, you're advised to pick something yourself
+  ;;         if you don't care about startup time, use
+  ;;  :hook (after-init . org-roam-ui-mode)
+  :config
+  (setq org-roam-ui-sync-theme t
+        org-roam-ui-follow t
+        org-roam-ui-update-on-save t
+        org-roam-ui-open-on-start t))
+
+
+(use-package! org-roam-bibtex
+  :after (org-roam)
+  :init
+  (setq org-roam-capture-templates
+        '(("d" "default" plain "\n%?"
+           :target
+           (file+head "${slug}.org" "#+title: ${title}\n#+date: %U\n")
+           :unnarrowed t)
+          ("c" "contact" plain "\n%?"
+           :target
+           (file+head "contact/${slug}.org" "#+title: ${title}\n")
+           :unnarrowed t)
+          ("r" "bibliography reference" plain
+           "Published by %^{author} in %^{year}.\n\n%?"
+           :target
+           (file+head "paper_notes/${citekey}.org" "#+title: ${title}\n#+date: %U\n")
+           :unnarrowed t)
+          ))
+  :hook (org-roam-mode . org-roam-bibtex-mode)
+  :custom
+  (orb-insert-interface  "ivy-bibtex")
+  :config
+  (setq orb-roam-ref-format 'org-ref-v3)
+  (setq orb-insert-link-description 'citation-org-ref-3)
+  (setq orb-preformat-keywords '("citekey" "author" "year"))
+  )
 
 ;; from org-ref manual
 (use-package! ivy-bibtex ;;
@@ -244,17 +486,20 @@
 
 (use-package! org-ref
   :init
-  (require 'bibtex)                                                                                                                                      ;;
-  (setq bibtex-autokey-year-length 4                                                                                                                     ;;
-        bibtex-autokey-name-year-separator "-"                                                                                                           ;;
-        bibtex-autokey-year-title-separator "-"                                                                                                          ;;
-        bibtex-autokey-titleword-separator "-"                                                                                                           ;;
-        bibtex-autokey-titlewords 2                                                                                                                      ;;
-        bibtex-autokey-titlewords-stretch 1                                                                                                              ;;
-        bibtex-autokey-titleword-length 5)                                                                                                               ;;
-  ;;(define-key bibtex-mode-map (kbd "H-b") 'org-ref-bibtex-hydra/body)                                                                                    ;;
-  ;;(define-key org-mode-map (kbd "C-c ]") 'org-ref-insert-link)                                                                                           ;;
-  ;; (define-key org-mode-map (kbd "s-[") 'org-ref-insert-link-hydra/body)                                                                                  ;;
+  (require 'bibtex)
+  (setq bibtex-autokey-year-length 4
+        bibtex-autokey-name-year-separator "-"
+        ;;
+        bibtex-autokey-year-title-separator "-"
+        ;;
+        bibtex-autokey-titleword-separator "-"
+        ;;
+        bibtex-autokey-titlewords 2
+        ;;
+        bibtex-autokey-titlewords-stretch 1
+        ;;
+        bibtex-autokey-titleword-length 5)
+
   (require 'org-ref-ivy)
   (require 'org-ref-arxiv)
   (require 'org-ref-scopus)
@@ -268,62 +513,27 @@
               org-ref-insert-ref-function 'org-ref-insert-ref-link
               org-ref-cite-onclick-function (lambda (_) (org-ref-citation-hydra/body))))
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
 (after! org
-  (setq org-roam-directory +jk/org-roam-directory)
-  ;; (setq org-roam-directory "/Users/k/OneDrive - nudt.edu.cn/org-notes/RoamNotes")
-  (setq org-roam-index-file (concat +jk/org-roam-directory "index.org"))
-  ;; (setq org-roam-index-file "/Users/k/OneDrive - nudt.edu.cn/org-notes/RoamNotes/index.org")
+  (setq org-startup-with-latex-preview t) ; 默认启用LaTeX预览
+  (add-to-list 'org-latex-packages-alist '("" "tcolorbox" t))
+  (add-to-list 'org-latex-packages-alist '("" "amsmath" t))
+  (add-to-list 'org-latex-packages-alist '("" "amsfonts" t))
+  (add-to-list 'org-latex-packages-alist '("" "bm" t))
+  (add-to-list 'org-latex-packages-alist '("" "hyperref" t))
+  (add-to-list 'org-latex-packages-alist '("" "verbatim" t))
+  (add-to-list 'org-latex-packages-alist '("" "array" t))
+  (add-to-list 'org-latex-packages-alist '("" "float" t))
+  (add-to-list 'org-latex-packages-alist '("" "makecell" t))
+  (add-to-list 'org-latex-packages-alist '("" "mathtools" t))
+  (add-to-list 'org-latex-packages-alist '("" "braket" t))
+  (add-to-list 'org-latex-packages-alist '("" "url" t))
+  (add-to-list 'org-latex-packages-alist '("" "subfig" t))
   )
 
-
-(use-package! org-roam-ui
-  :after org-roam
-  ;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
-  ;;         a hookable mode anymore, you're advised to pick something yourself
-  ;;         if you don't care about startup time, use
-  ;;  :hook (after-init . org-roam-ui-mode)
-  :config
-  (setq org-roam-ui-sync-theme t
-        org-roam-ui-follow t
-        org-roam-ui-update-on-save t
-        org-roam-ui-open-on-start t))
-
-
-(use-package! org-roam-bibtex
-  :after (org-roam)
-  :init
-  (setq org-roam-capture-templates
-        '(("d" "default" plain "\n%?"
-           :target
-           (file+head "${slug}.org" "#+title: ${title}\n#+date: %U\n")
-           :unnarrowed t)
-          ("r" "bibliography reference" plain
-           "Published by %^{author} in %^{year}.\n\n%?"
-           :target
-           (file+head "paper_notes/${citekey}.org" "#+title: ${title}\n#+date: %U\n")
-           :unnarrowed t)
-          ))
-  :hook (org-roam-mode . org-roam-bibtex-mode)
-  :custom
-  (orb-insert-interface  "ivy-bibtex")
-  :config
-  (setq orb-roam-ref-format 'org-ref-v3)
-  (setq orb-insert-link-description 'citation-org-ref-3)
-  (setq orb-preformat-keywords '("citekey" "author" "year"))
-  )
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+;;Org mode supports inline image previews of LaTeX fragments. These can be toggled with C-c C-x C-l. org-fragtog automates this, so fragment previews are disabled for editing when your cursor steps onto them, and re-enabled when the cursor leaves.
+(use-package! org-fragtog
+  :after org
+  :hook (org-mode . org-fragtog-mode))
 
 (use-package! org-noter
   ;; sequence should be respected as in org-pdftools description: org-noter then org-pdftools then org-noter-pdftools
@@ -352,118 +562,124 @@
   ;;       (insert (format "#+BEGIN_QUOTE\n%s\n#+END_QUOTE" title))))
   )
 
+(defun send-notification (title message)
+  "Send a macOS notification."
+  (let ((script (format "display notification \"%s\" with title \"%s\""
+                        message title)))
+    (start-process "osascript-send-notification" nil "osascript" "-e" script)))
+
+(send-notification "Pomodoro Complete" "Take a break!")
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(after! org-pomodoro
+  (setq
+   org-pomodoro-length 25
+   org-pomodoro-short-break-length 5
+   ;; 完成一个时间段后，是否需要认为停止
+   ;; org-pomodoro-manual-break t
+   org-pomodoro-keep-killed-pomodoro-time t
 
+   org-pomodoro-start-sound (concat +jk/resources-directory "/huawei.wav")
+   org-pomodoro-finished-sound (concat +jk/resources-directory "/huawei.wav")
+   org-pomodoro-overtime-sound (concat +jk/resources-directory "/huawei.wav")
+   org-pomodoro-short-break-sound (concat +jk/resources-directory "/huawei.wav")
+   org-pomodoro-long-break-sound (concat +jk/resources-directory "/huawei.wav")
+   )
+  (add-hook 'org-pomodoro-finished-hook
+            (lambda ()
+              (send-notification "Pomodoro Complete" "Take a break!")))
+  (add-hook 'org-pomodoro-short-break-finished-hook
+            (lambda ()
+              (send-notification "Pomodoro Complete" "Short break is finished!")))
+  (add-hook 'org-pomodoro-long-break-finished-hook
+            (lambda ()
+              (send-notification "Pomodoro Complete" "Long break is finished!")))
 
-;;Org mode supports inline image previews of LaTeX fragments. These can be toggled with C-c C-x C-l. org-fragtog automates this, so fragment previews are disabled for editing when your cursor steps onto them, and re-enabled when the cursor leaves.
-(use-package! org-fragtog
-  :after org
-  :hook (org-mode . org-fragtog-mode))
+  )
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; be careful
+;; maybe not work and have side effects
+;; https://github.com/emacs-evil/evil/issues/1623
+(advice-remove 'set-window-buffer #'ad-Advice-set-window-buffer)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(after! org
+  (setq org-hide-emphasis-markers t))
+(after! org-appear
+  (setq org-appear-autolinks t ))
 
-(add-hook 'window-setup-hook #'doom/quickload-session)
+(use-package! org-pandoc-import :after org)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; maximize the window on initialization
-(add-to-list 'default-frame-alist '(fullscreen . maximized))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; [https://github.com/doomemacs/doomemacs/issues/6647](https://github.com/doomemacs/doomemacs/issues/6647)
-;; to solve Tabs does not work with daemon
-(after! centaur-tabs
-  (setq centaur-tabs-set-bar 'right))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;; add scroll bar
-(scroll-bar-mode 1)
-
-;; disable confirm exit
-(setq confirm-kill-emacs nil)
-
-;; to support select and move by mouse
-(setq mouse-drag-and-drop-region t)
-
-;; open "M-x" by "SPC SPC"
-(map! :leader
-      :desc "Open like spacemacs" "SPC" #'execute-extended-command)
-      ;; counsel-M-x)
-
-;; set undo
-(global-set-key (kbd "C-z") 'undo)
-
-
-;; auto-save-mode is somewhat a backup in temporary file named #<file_name>#, auto-save-visited-mode is actually auto save on related file
-(auto-save-visited-mode +1)
-
-
-
-;; ;; Drag-and-drop to `dired` for org-download
-;; (add-hook 'dired-mode-hook 'org-download-enable)
-;; ;; set org-download-image-dir
-;; ;; (setq +jk/org-download-image-dir (concat org-directory "images/"))
-;; (setq-default org-download-image-dir (concat org-directory "images/"))
-
-
-
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-;; (use-package! chatgpt
-;;   :defer t
-;;   :config
-;;   (unless (boundp 'python-interpreter)
-;;     (defvaralias 'python-interpreter 'python-shell-interpreter))
-;;   (setq chatgpt-repo-path (expand-file-name "straight/repos/ChatGPT.el/" doom-local-dir))
-;;   (set-popup-rule! (regexp-quote "*ChatGPT*")
-;;     :side 'bottom :size .5 :ttl nil :quit t :modeline nil)
-;;   :bind ("C-c q" . chatgpt-query))
-
-;; (setq chatgpt-query-format-string-map '(
-;;                                         ;; ChatGPT.el defaults
-;;                                         ("doc" . "Please write the documentation for the following function.\n\n%s")
-;;                                         ("bug" . "There is a bug in the following function, please help me fix it.\n\n%s")
-;;                                         ("understand" . "What does the following function do?\n\n%s")
-;;                                         ("improve" . "Please improve the following code.\n\n%s")
-;;                                         ;; your new prompt
-;;                                         ("my-custom-type" . "My custom prompt.\n\n%s")))
-
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(use-package! org-modern
+  :hook (org-mode . org-modern-mode)
+  :config
+  (setq org-modern-star '("◉" "○" "✸" "✿" "✤" "✜" "◆" "▶")
+        org-modern-table-vertical 1
+        org-modern-table-horizontal 0.2
+        org-modern-list '((43 . "➤")
+                          (45 . "–")
+                          (42 . "•"))
+        org-modern-todo-faces
+        '(("TODO" :inverse-video t :inherit org-todo)
+          ("PROJ" :inverse-video t :inherit +org-todo-project)
+          ("STRT" :inverse-video t :inherit +org-todo-active)
+          ("[-]"  :inverse-video t :inherit +org-todo-active)
+          ("HOLD" :inverse-video t :inherit +org-todo-onhold)
+          ("WAIT" :inverse-video t :inherit +org-todo-onhold)
+          ("[?]"  :inverse-video t :inherit +org-todo-onhold)
+          ("KILL" :inverse-video t :inherit +org-todo-cancel)
+          ("NO"   :inverse-video t :inherit +org-todo-cancel))
+        org-modern-footnote
+        (cons nil (cadr org-script-display))
+        org-modern-block-fringe nil
+        org-modern-block-name
+        '((t . t)
+          ("src" "»" "«")
+          ("example" "»–" "–«")
+          ("quote" "❝" "❞")
+          ("export" "⏩" "⏪"))
+        org-modern-progress nil
+        org-modern-priority nil
+        org-modern-horizontal-rule (make-string 36 ?─)
+        ;; org-modern-keyword
+        ;; '((t . t)
+        ;;   ("title" . "𝙏")
+        ;;   ("subtitle" . "𝙩")
+        ;;   ("author" . "𝘼")
+        ;; ("email" . #("" 0 1 (display (raise -0.14))))
+        ;; ("date" . "𝘿")
+        ;; ("property" . "☸")
+        ;; ("options" . "⌥")
+        ;; ("startup" . "⏻")
+        ;; ("macro" . "𝓜")
+        ;; ("bind" . #("" 0 1 (display (raise -0.1))))
+        ;; ("bibliography" . "")
+        ;; ("print_bibliography" . #("" 0 1 (display (raise -0.1))))
+        ;; ("cite_export" . "⮭")
+        ;; ("print_glossary" . #("ᴬᶻ" 0 1 (display (raise -0.1))))
+        ;; ("glossary_sources" . #("" 0 1 (display (raise -0.14))))
+        ;; ("include" . "⇤")
+        ;; ("setupfile" . "⇚")
+        ;; ("html_head" . "🅷")
+        ;; ("html" . "🅗")
+        ;; ("latex_class" . "🄻")
+        ;; ("latex_class_options" . #("🄻" 1 2 (display (raise -0.14))))
+        ;; ("latex_header" . "🅻")
+        ;; ("latex_header_extra" . "🅻⁺")
+        ;; ("latex" . "🅛")
+        ;; ("beamer_theme" . "🄱")
+        ;; ("beamer_color_theme" . #("🄱" 1 2 (display (raise -0.12))))
+        ;; ("beamer_font_theme" . "🄱𝐀")
+        ;; ("beamer_header" . "🅱")
+        ;; ("beamer" . "🅑")
+        ;; ("attr_latex" . "🄛")
+        ;; ("attr_html" . "🄗")
+        ;; ("attr_org" . "⒪")
+        ;; ("call" . #("" 0 1 (display (raise -0.15))))
+        ;; ("name" . "⁍")
+        ;; ("header" . "›")
+        ;; ("caption" . "☰")
+        ;; ("results" . "🠶")
+        ;; )
+        )
+  (custom-set-faces! '(org-modern-statistics :inherit org-checkbox-statistics-todo)))
