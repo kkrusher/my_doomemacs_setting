@@ -130,7 +130,7 @@
 
 (setq +jk/doom-directory "/Users/k/.config/doom/")
 (setq +jk/doom-config-el (concat +jk/doom-directory "/config.el"))
-(setq +jk/doom-config-org (concat org-directory "/config.org"))
+(setq +jk/doom-config-org (concat org-directory "/resources/config.org"))
 
 ;; (setq +jk/agenda-directory (concat  org-directory "/agenda/"))
 (setq +jk/agenda-directory org-directory)
@@ -182,14 +182,70 @@
 
 (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
 
-(after! treemacs
+(map!
+ :g "s-["       #'centaur-tabs-backward
+ :g "s-]"       #'centaur-tabs-forward
+ )
 
+;; [https://github.com/doomemacs/doomemacs/issues/6647](https://github.com/doomemacs/doomemacs/issues/6647)
+;; to solve Tabs does not work with daemon
+(after! centaur-tabs
+  (setq centaur-tabs-set-bar 'right)
+
+  (defun centaur-tabs-buffer-groups ()
+    "`centaur-tabs-buffer-groups' control buffers' group rules.
+
+Group centaur-tabs with mode if buffer is derived from `eshell-mode' `emacs-lisp-mode' `dired-mode' `org-mode' `magit-mode'.
+All buffer name start with * will group to \"Emacs\".
+Other buffer group by `centaur-tabs-get-group-name' with project name."
+    (list
+     (cond
+      ((or (string-equal "*" (substring (buffer-name) 0 1))
+           (memq major-mode '(magit-process-mode
+                              magit-status-mode
+                              magit-diff-mode
+                              magit-log-mode
+                              magit-file-mode
+                              magit-blob-mode
+                              magit-blame-mode
+                              )))
+       "Emacs")
+      ((derived-mode-p 'prog-mode)
+       "Editing")
+      ((derived-mode-p 'dired-mode)
+       "Dired")
+      ((memq major-mode '(helpful-mode
+                          help-mode))
+       "Help")
+      ((memq major-mode '(org-mode
+                          org-agenda-clockreport-mode
+                          org-src-mode
+                          org-agenda-mode
+                          org-beamer-mode
+                          org-indent-mode
+                          org-bullets-mode
+                          org-cdlatex-mode
+                          org-agenda-log-mode
+                          diary-mode))
+       "OrgMode")
+      (t
+       (centaur-tabs-get-group-name (current-buffer))))))
+
+  (setq centaur-tabs-label-fixed-length 8)
+  )
+
+(after! treemacs
   ;;(map! "<f11>" #'treemacs)
   ;; add a key binding to treemacs select window
   (map! :leader
         "w p" #'treemacs-select-window)
-  (setq treemacs-sorting 'mod-time-desc)
+
+  ;; (setq treemacs-sorting 'mod-time-desc)
+  (setq treemacs-sorting ' alphabetic-asc)
+
   (setq treemacs-tag-follow-mode t)
+  ;; Dotfiles will be shown if this is set to t and be hidden otherwise.
+  (setq treemacs-show-hidden-files nil)
   )
 
 ;; start treemacs on emacs startup
@@ -270,18 +326,22 @@
         '((sequence "TODO(t)" "PROJ(p)" "LOOP(r)" "NEXT(n)" "WAIT(w@/!)" "HOLD(h)" "IDEA(i)" "|" "DONE(d!)" "KILL(k@)")
           )
         )
+  )
+
+(after! org
+  ;; https://emacs.stackexchange.com/questions/29152/how-to-use-global-tags-list-when-tagging-text-files-with-org-mode-and-helm
+  ;; 设置补全时显示所有agenda文件中的tag
+  (setq org-complete-tags-always-offer-all-agenda-tags t)
 
   ;;default tag list
-  (setq org-tag-alist '(("@work" . ?w)
-                        ("@home" . ?h)
-                        ("Search" . ?s)
-                        ("Development" . ?D)
-                        ("Daily" . ?d)
-                        ("Configuration" . ?c)
-                        ("emacs" . ?E)
-                        ("python" . ?P)
-                        ("shell". ?S)
-                        ))
+  (setq org-tag-persistent-alist '(("@work" . ?w)
+                                   ("@home" . ?h)
+                                   ("emacs" . ?E)
+                                   ("python" . ?P)
+                                   ("shell". ?S)
+                                   ("LLM")
+                                   ("zotero")
+                                   ))
   )
 
 (after! org
