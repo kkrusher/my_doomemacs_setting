@@ -626,10 +626,12 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   )
 
 (defun send-notification (title message)
-  "Send a macOS notification."
-  (let ((script (format "display notification \"%s\" with title \"%s\""
-                        message title)))
-    (start-process "osascript-send-notification" nil "osascript" "-e" script)))
+  "Send a macOS notification if on a macOS system."
+  (when (eq system-type 'darwin)
+    (let ((script (format "display notification \"%s\" with title \"%s\""
+                          message title)))
+      (start-process "osascript-send-notification" nil "osascript" "-e" script))))
+
 
 (send-notification "Pomodoro Complete" "Take a break!")
 
