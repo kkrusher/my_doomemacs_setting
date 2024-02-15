@@ -80,6 +80,30 @@
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
 
+(setq user-directory "/Users/k/")
+;; (setq user-directory "/home/k/")
+
+(setq org-directory (concat user-directory "my_org-files/"))
+;; (setq org-directory "/sdcard/p9fqy-76ejy")
+
+(setq +jk/onedrive-directory (concat user-directory  "OneDrive - nudt.edu.cn/"))
+(setq +jk/bibtex-pdf-file-directory (concat +jk/onedrive-directory "/Zotero/"))
+
+(setq +jk/doom-directory  (concat user-directory ".config/doom/"))
+
+
+(setq +jk/doom-config-el (concat +jk/doom-directory "/config.el"))
+(setq +jk/doom-config-org (concat org-directory "/resources/config.org"))
+
+;; (setq +jk/agenda-directory (concat  org-directory "/agenda/"))
+(setq +jk/agenda-directory org-directory)
+(setq +jk/org-capture-inbox-file (concat org-directory "/agenda/inbox.org"))
+
+(setq +jk/org-roam-directory org-directory )
+(setq +jk/resources-directory (concat org-directory "/resources/"))
+(setq +jk/bibtex-file (concat +jk/resources-directory "/MyLibrary.bib"))
+(setq +jk/paper-notes-directory (concat +jk/org-roam-directory "paper_notes/"))
+
 ;; maximize the window on initialization
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
@@ -123,25 +147,6 @@
 ;; open "M-x" by "M-SPC M-SPC"
 (map! :leader
       :desc "Open like spacemacs" "M-SPC" #'execute-extended-command)
-
-(setq org-directory "/Users/k/my_org-files/")
-;; (setq org-directory "~/p9fqy-76ejy")
-
-(setq +jk/onedrive-directory "/Users/k/OneDrive - nudt.edu.cn/")
-
-(setq +jk/doom-directory "/Users/k/.config/doom/")
-(setq +jk/doom-config-el (concat +jk/doom-directory "/config.el"))
-(setq +jk/doom-config-org (concat org-directory "/resources/config.org"))
-
-;; (setq +jk/agenda-directory (concat  org-directory "/agenda/"))
-(setq +jk/agenda-directory org-directory)
-(setq +jk/org-capture-inbox-file (concat org-directory "/agenda/inbox.org"))
-
-(setq +jk/org-roam-directory org-directory )
-(setq +jk/resources-directory (concat org-directory "/resources/"))
-(setq +jk/bibtex-file (concat +jk/resources-directory "/MyLibrary.bib"))
-(setq +jk/bibtex-pdf-file-directory (concat +jk/onedrive-directory "/Zotero/"))
-(setq +jk/paper-notes-directory (concat +jk/org-roam-directory "paper_notes/"))
 
 ;; Kicked out of insert mode when typing 'fd' quickly
 ;; https://github.com/doomemacs/doomemacs/issues/1946
@@ -471,9 +476,7 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
 
 (after! org
   (setq org-roam-directory org-directory)
-  ;; (setq org-roam-directory "/Users/k/OneDrive - nudt.edu.cn/org-notes/RoamNotes")
   (setq org-roam-index-file (concat +jk/org-roam-directory "index.org"))
-  ;; (setq org-roam-index-file "/Users/k/OneDrive - nudt.edu.cn/org-notes/RoamNotes/index.org")
   ;; 使org agenda显示.org_archive文件中的todo entry
   (setq org-agenda-archives-mode t)
   )
@@ -528,7 +531,6 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
         ;; If the BibTeX entries have a field that specifies the full path to the PDFs, that field can also be used. For example, JabRef and Zotero store the location of PDFs in a field called File:
         bibtex-completion-pdf-field "file"
         bibtex-completion-library-path (list +jk/bibtex-pdf-file-directory)
-        ;; bibtex-completion-notes-path "/Users/k/OneDrive - nudt.edu.cn/org-notes/RoamNotes/paper_notes/"
         bibtex-completion-notes-path +jk/paper-notes-directory
         bibtex-completion-notes-template-multiple-files "* ${author-or-editor}, ${title}, ${journal}, (${year}) :${=type=}: \n\nSee [[cite:&${=key=}]]\n"
 
@@ -744,3 +746,6 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
         ;; )
         )
   (custom-set-faces! '(org-modern-statistics :inherit org-checkbox-statistics-todo)))
+
+(after! org
+  (customize-set-variable 'org-anki-default-deck "my-target-deck"))

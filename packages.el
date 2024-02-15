@@ -97,3 +97,9 @@
   :recipe (:host github
            :repo "laishulu/emacs-smart-input-source"
            :files ("*.el")))
+
+
+(package! org-anki
+  :recipe (:host github
+           :repo "eyeinsky/org-anki"
+           :files ("*.el")))
