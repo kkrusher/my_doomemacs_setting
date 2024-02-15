@@ -125,6 +125,7 @@
       :desc "Open like spacemacs" "M-SPC" #'execute-extended-command)
 
 (setq org-directory "/Users/k/my_org-files/")
+;; (setq org-directory "~/p9fqy-76ejy")
 
 (setq +jk/onedrive-directory "/Users/k/OneDrive - nudt.edu.cn/")
 
