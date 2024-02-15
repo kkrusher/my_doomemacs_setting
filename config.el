@@ -81,9 +81,9 @@
 ;; they are implemented.
 
 (setq user-directory "/Users/k/")
-;; (setq user-directory "/home/k/")
-
 (setq org-directory (concat user-directory "my_org-files/"))
+
+;; (setq user-directory "/home/k/")
 ;; (setq org-directory "/sdcard/p9fqy-76ejy")
 
 (setq +jk/onedrive-directory (concat user-directory  "OneDrive - nudt.edu.cn/"))
