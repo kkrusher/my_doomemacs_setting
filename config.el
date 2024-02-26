@@ -128,7 +128,7 @@
 
 ;; 通过启用 visual-line-mode 来实现到达屏幕边缘时自动换行。visual-line-mode 是一个 minor mode，它会根据窗口大小而不是固定的列数来换行。
 (when (eq system-type 'android)
-  (add-hook! 'text-mode-hook 'visual-line-mode))
+  (add-hook! 'text-mode-hook #'visual-line-mode))
 
 ;; maximize the window on initialization
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
@@ -154,6 +154,15 @@
           (lambda ()
             (find-file (concat org-directory "/agenda/inbox.org"))
             (delete-other-windows)))
+
+
+;; 在所有可编辑模式下自动进入 insert 模式，你可以使用 derived-mode-p 函数来检查当前模式是否派生自 text-mode 或其他可编辑模式。
+;; find-file-hook 钩子在每次打开一个新文件时触发
+(add-hook 'find-file-hook
+          (lambda ()
+            (when (or (derived-mode-p 'text-mode)
+                      (derived-mode-p 'prog-mode))
+              (evil-insert-state))))
 
 ;; set undo
 (global-set-key (kbd "C-z") 'undo)
@@ -741,5 +750,7 @@ Android port."
         "\\(?:SCHEDULED\\|DEADLINE\\):.*?<.*?\\([0-9]\\{2\\}:[0-9]\\{2\\}\\).*>")
 
   ;; Enable org-alert
-  (org-alert-enable)
+  ;; 在配置中打开org-alert会导致org mode文件渲染的问题，应该是和org-modern等用来美化org mode的包不兼容
+  ;; 如果需要的话，尝试手动打开
+  ;; (org-alert-enable)
   )
