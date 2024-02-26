@@ -130,6 +130,12 @@
 (when (eq system-type 'android)
   (add-hook! 'text-mode-hook #'visual-line-mode))
 
+
+;; 在 text-mode-hook 中添加调试代码，每当进入 Text mode 时，都会在 Emacs 的 *Messages* 缓冲区中打印一条消息，表明该钩子已被执行。
+(add-hook 'text-mode-hook
+          (lambda ()
+            (message "text-mode-hook executed")))
+
 ;; maximize the window on initialization
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
@@ -459,55 +465,111 @@
 
   )
 
-(after! org
-  (setq org-roam-directory org-directory)
-  (setq org-roam-index-file (concat +jk/org-roam-directory "index.org"))
-  ;; 使org agenda显示.org_archive文件中的todo entry
-  (setq org-agenda-archives-mode t)
+(when (eq system-type 'darwin)  ; Check if the system is Mac
+  (after! org
+    (setq org-roam-directory org-directory)
+    (setq org-roam-index-file (concat +jk/org-roam-directory "index.org"))
+    ;; 使org agenda显示.org_archive文件中的todo entry
+    (setq org-agenda-archives-mode t)
+    )
+
+  (use-package! org-roam-ui
+    :after org-roam
+    ;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
+    ;;         a hookable mode anymore, you're advised to pick something yourself
+    ;;         if you don't care about startup time, use
+    ;;  :hook (after-init . org-roam-ui-mode)
+    :config
+    (setq org-roam-ui-sync-theme t
+          org-roam-ui-follow t
+          org-roam-ui-update-on-save t
+          org-roam-ui-open-on-start t))
   )
 
+(when (eq system-type 'darwin)  ; Check if the system is Mac
+  (use-package! org-roam-bibtex
+    :after (org-roam)
+    :init
+    (setq org-roam-capture-templates
+          '(("d" "default" plain "\n%?"
+             :target
+             (file+head "${slug}.org" "#+title: ${title}\n#+date: %U\n")
+             :unnarrowed t)
+            ("c" "contact" plain "\n%?"
+             :target
+             (file+head "contact/${slug}.org" "#+title: ${title}\n")
+             :unnarrowed t)
+            ("r" "bibliography reference" plain
+             "Published by %^{author} in %^{year}.\n\n%?"
+             :target
+             (file+head "paper_notes/${citekey}.org" "#+title: ${title}\n#+date: %U\n")
+             :unnarrowed t)
+            ))
+    :hook (org-roam-mode . org-roam-bibtex-mode)
+    :custom
+    (orb-insert-interface  "ivy-bibtex")
+    :config
+    (setq orb-roam-ref-format 'org-ref-v3)
+    (setq orb-insert-link-description 'citation-org-ref-3)
+    (setq orb-preformat-keywords '("citekey" "author" "year"))
+    )
 
-(use-package! org-roam-ui
-  :after org-roam
-  ;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
-  ;;         a hookable mode anymore, you're advised to pick something yourself
-  ;;         if you don't care about startup time, use
-  ;;  :hook (after-init . org-roam-ui-mode)
-  :config
-  (setq org-roam-ui-sync-theme t
-        org-roam-ui-follow t
-        org-roam-ui-update-on-save t
-        org-roam-ui-open-on-start t))
-
-(use-package! org-roam-bibtex
-  :after (org-roam)
-  :init
-  (setq org-roam-capture-templates
-        '(("d" "default" plain "\n%?"
-           :target
-           (file+head "${slug}.org" "#+title: ${title}\n#+date: %U\n")
-           :unnarrowed t)
-          ("c" "contact" plain "\n%?"
-           :target
-           (file+head "contact/${slug}.org" "#+title: ${title}\n")
-           :unnarrowed t)
-          ("r" "bibliography reference" plain
-           "Published by %^{author} in %^{year}.\n\n%?"
-           :target
-           (file+head "paper_notes/${citekey}.org" "#+title: ${title}\n#+date: %U\n")
-           :unnarrowed t)
-          ))
-  :hook (org-roam-mode . org-roam-bibtex-mode)
-  :custom
-  (orb-insert-interface  "ivy-bibtex")
-  :config
-  (setq orb-roam-ref-format 'org-ref-v3)
-  (setq orb-insert-link-description 'citation-org-ref-3)
-  (setq orb-preformat-keywords '("citekey" "author" "year"))
+  (map! :leader
+        "m m l" #'orb-insert-link)
   )
 
-(map! :leader
-      "m m l" #'orb-insert-link)
+(when (eq system-type 'darwin)  ; Check if the system is Mac
+  (setq +jk/onedrive-directory (concat user-directory  "OneDrive - nudt.edu.cn/"))
+  (setq +jk/bibtex-pdf-file-directory (concat +jk/onedrive-directory "/Zotero/"))
+
+  ;; from org-ref manual
+  (use-package! ivy-bibtex ;;
+    :init                 ;;
+    (setq bibtex-completion-bibliography (list +jk/bibtex-file) ;;
+          ;; If the BibTeX entries have a field that specifies the full path to the PDFs, that field can also be used. For example, JabRef and Zotero store the location of PDFs in a field called File:
+          bibtex-completion-pdf-field "file"
+          bibtex-completion-library-path (list +jk/bibtex-pdf-file-directory)
+          bibtex-completion-notes-path +jk/paper-notes-directory
+          bibtex-completion-notes-template-multiple-files "* ${author-or-editor}, ${title}, ${journal}, (${year}) :${=type=}: \n\nSee [[cite:&${=key=}]]\n"
+
+          bibtex-completion-additional-search-fields '(keywords)
+          bibtex-completion-display-formats
+          '((article       . "${=has-pdf=:1}${=has-note=:1} ${year:4} ${author:36} ${title:*} ${journal:40}")
+            (inbook        . "${=has-pdf=:1}${=has-note=:1} ${year:4} ${author:36} ${title:*} Chapter ${chapter:32}")
+            (incollection  . "${=has-pdf=:1}${=has-note=:1} ${year:4} ${author:36} ${title:*} ${booktitle:40}")
+            (inproceedings . "${=has-pdf=:1}${=has-note=:1} ${year:4} ${author:36} ${title:*} ${booktitle:40}")
+            (t             . "${=has-pdf=:1}${=has-note=:1} ${year:4} ${author:36} ${title:*}"))
+          bibtex-completion-pdf-open-function
+          (lambda (fpath)
+            (call-process "open" nil 0 nil fpath))))
+
+  (use-package! org-ref
+    :init
+    (require 'bibtex)
+    (setq bibtex-autokey-year-length 4
+          bibtex-autokey-name-year-separator "-"
+          ;;
+          bibtex-autokey-year-title-separator "-"
+          ;;
+          bibtex-autokey-titleword-separator "-"
+          ;;
+          bibtex-autokey-titlewords 2
+          ;;
+          bibtex-autokey-titlewords-stretch 1
+          ;;
+          bibtex-autokey-titleword-length 5)
+    (require 'org-ref-ivy)
+    (require 'org-ref-arxiv)
+    (require 'org-ref-scopus)
+    (require 'org-ref-wos))
+
+  (use-package! org-ref-ivy
+    :init (setq org-ref-insert-link-function 'org-ref-insert-link-hydra/body
+                org-ref-insert-cite-function 'org-ref-cite-insert-ivy
+                org-ref-insert-label-function 'org-ref-insert-label-link
+                org-ref-insert-ref-function 'org-ref-insert-ref-link
+                org-ref-cite-onclick-function (lambda (_) (org-ref-citation-hydra/body))))
+  )
 
 (after! org
   (setq org-startup-with-latex-preview t) ; 默认启用LaTeX预览
