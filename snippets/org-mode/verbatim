@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
-# name: /
-# key: /
+# name: =
+# key: verbatim
 # group: org-mode formatting
 # --
-/`%`${1:文字}/$0
+=`%`$1=$0

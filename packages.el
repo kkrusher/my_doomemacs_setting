@@ -103,3 +103,34 @@
   :recipe (:host github
            :repo "eyeinsky/org-anki"
            :files ("*.el")))
+
+;; (package! org-fc
+;;   :recipe (:host github
+;;            :repo "l3kn/org-fc"
+;;            :files (:defaults "awk" "demo.org")))
+
+(package! org-fc
+  :recipe (:local-repo "lisp/org-fc"
+           :build (:not compile)
+           :files (:defaults "awk" "demo.org")))
+
+
+;; https://github.com/doomemacs/doomemacs/blob/master/docs/getting_started.org#changing-a-recipe-for-an-included-package
+;; If a Doom module installs package X from one place, but you’d like to install it from another (say, a superior fork),
+;; add a package! declaration for it in your DOOMDIR/packages.el. Your private declarations always have precedence over modules (even your own).
+;; pyim 在chinese模块中已经加载了
+(package! pyim
+  :recipe (:host github
+           :repo "tumashu/pyim"
+           :files ("*.el")))
+
+(package! pyim-basedict
+  :recipe (:host github
+           :repo "tumashu/pyim-basedict"
+           :files ("*")))
+
+
+(package! highlight-parentheses)
+
+(package! alert)
+(package! org-alert)

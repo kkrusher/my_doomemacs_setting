@@ -3,4 +3,4 @@
 # key: _
 # group: org-mode formatting
 # --
-_`%`${1:文字}_$0
+_`%`$1_$0

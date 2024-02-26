@@ -1,6 +1,6 @@
 # -*- mode: snippet -*-
-# name: monospace
-# key: ~
+# name: ~
+# key: monospace
 # group: org-mode formatting
 # --
-~`%`${1:文字}~$0
+~`%`$1~$0

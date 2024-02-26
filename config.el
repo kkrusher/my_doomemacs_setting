@@ -104,6 +104,26 @@
 (setq +jk/bibtex-file (concat +jk/resources-directory "/MyLibrary.bib"))
 (setq +jk/paper-notes-directory (concat +jk/org-roam-directory "paper_notes/"))
 
+;; solve the problem of 'Cmd-x raise M-x rather than cut' problem
+;; https://github.com/doomemacs/doomemacs/issues/3860
+(defun cut-region (beg end)
+  "Copies the text to the kill buffer and deletes the selected region."
+  (interactive "r")
+  (copy-region-as-kill beg end)
+  (delete-region beg end))
+(map! "s-x" #'cut-region)
+
+(defun open-default-markdown-file ()
+  "Open a specific Markdown file."
+  (interactive)
+  (find-file (concat +jk/resources-directory "/md2org.md"))
+  ;; 直接进入insert mode
+  (evil-insert-state)
+  )
+
+(map! :leader
+      :desc "Open default markdown file" "o m" #'open-default-markdown-file)
+
 ;; maximize the window on initialization
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
@@ -119,23 +139,24 @@
 ;; auto-save-mode is somewhat a backup in temporary file named #<file_name>#, auto-save-visited-mode is actually auto save on related file
 (auto-save-visited-mode +1)
 
-;; solve the problem of 'Cmd-x raise M-x rather than cut' problem
-;; https://github.com/doomemacs/doomemacs/issues/3860
-(defun cut-region (beg end)
-  "Copies the text to the kill buffer and deletes the selected region."
-  (interactive "r")
-  (copy-region-as-kill beg end)
-  (delete-region beg end))
-(map! "s-x" #'cut-region)
-
 ;; load sessions from last leave
 ;; cuurently have bugs, use "SPC q L" instead
 ;; (add-hook! 'window-setup-hook #'doom/quickload-session)
 
+
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (find-file (concat org-directory "/agenda/inbox.org"))
+            (delete-other-windows)))
+
 ;; set undo
 (global-set-key (kbd "C-z") 'undo)
 
-(map! :g "s-w"       #'kill-this-buffer)
+(map!
+ :g "s-w"       #'kill-this-buffe
+ :g "s-["       #'previous-buffer
+ :g "s-]"       #'next-buffer
+ )
 
 ;;  SPC f f 默认搜索当前buffer所在的目录，这里更改成搜索当前buffer所在的project
 (map! :leader
@@ -157,15 +178,17 @@
 (after! gcmh
   (setq gcmh-high-cons-threshold 33554432))
 
-;; 设置中文字体
+(after! org
+  (setq word-wrap-by-category t)
+  )
+
+;; 设置中文字体。 测试： 将 直 言 判
 ;; https://emacs-china.org/t/doom-emacs/23513/8
 (defun my-cjk-font()
   (dolist (charset '(kana han cjk-misc symbol bopomofo))
     (set-fontset-font t charset (font-spec :family "STKaiti"))))
 
 (add-hook 'after-setting-font-hook #'my-cjk-font)
-
-;; 测试： 将 直 言 判
 
 (setq org-emphasis-regexp-components
       '("-[:multibyte:][:space:]('\"{"
@@ -187,58 +210,6 @@
       (org-babel-tangle))))
 
 (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
-
-(map!
- :g "s-["       #'centaur-tabs-backward
- :g "s-]"       #'centaur-tabs-forward
- )
-
-;; [https://github.com/doomemacs/doomemacs/issues/6647](https://github.com/doomemacs/doomemacs/issues/6647)
-;; to solve Tabs does not work with daemon
-(after! centaur-tabs
-  (setq centaur-tabs-set-bar 'right)
-
-  (defun centaur-tabs-buffer-groups ()
-    "`centaur-tabs-buffer-groups' control buffers' group rules.
-
-Group centaur-tabs with mode if buffer is derived from `eshell-mode' `emacs-lisp-mode' `dired-mode' `org-mode' `magit-mode'.
-All buffer name start with * will group to \"Emacs\".
-Other buffer group by `centaur-tabs-get-group-name' with project name."
-    (list
-     (cond
-      ((or (string-equal "*" (substring (buffer-name) 0 1))
-           (memq major-mode '(magit-process-mode
-                              magit-status-mode
-                              magit-diff-mode
-                              magit-log-mode
-                              magit-file-mode
-                              magit-blob-mode
-                              magit-blame-mode
-                              )))
-       "Emacs")
-      ((derived-mode-p 'prog-mode)
-       "Editing")
-      ((derived-mode-p 'dired-mode)
-       "Dired")
-      ((memq major-mode '(helpful-mode
-                          help-mode))
-       "Help")
-      ((memq major-mode '(org-mode
-                          org-agenda-clockreport-mode
-                          org-src-mode
-                          org-agenda-mode
-                          org-beamer-mode
-                          org-indent-mode
-                          org-bullets-mode
-                          org-cdlatex-mode
-                          org-agenda-log-mode
-                          diary-mode))
-       "OrgMode")
-      (t
-       (centaur-tabs-get-group-name (current-buffer))))))
-
-  (setq centaur-tabs-label-fixed-length 8)
-  )
 
 (after! treemacs
   ;;(map! "<f11>" #'treemacs)
@@ -286,10 +257,6 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
           ("fig" . "xfig %s")
           (t . "open %s")))
   ;;  (setq org-file-apps org-file-apps-macosx)
-  )
-
-(after! org
-  (setq word-wrap-by-category t)
   )
 
 (after! org-download
@@ -461,10 +428,10 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
           ))
 
   ;; 打开emacs 显示自定义的agenda view
-  (add-hook 'emacs-startup-hook
-            (lambda ()
-              (org-agenda nil "A")
-              (delete-other-windows)))
+  ;; (add-hook 'emacs-startup-hook
+  ;;           (lambda ()
+  ;;             (org-agenda nil "A")
+  ;;             (delete-other-windows)))
 
   ;; 设置agenda自动显示时间统计报告
   (setq org-agenda-start-with-clockreport-mode t)
@@ -482,8 +449,6 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   )
 
 
-
-
 (use-package! org-roam-ui
   :after org-roam
   ;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
@@ -495,7 +460,6 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
         org-roam-ui-follow t
         org-roam-ui-update-on-save t
         org-roam-ui-open-on-start t))
-
 
 (use-package! org-roam-bibtex
   :after (org-roam)
@@ -523,6 +487,9 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   (setq orb-insert-link-description 'citation-org-ref-3)
   (setq orb-preformat-keywords '("citekey" "author" "year"))
   )
+
+(map! :leader
+      "m m l" #'orb-insert-link)
 
 ;; from org-ref manual
 (use-package! ivy-bibtex ;;
@@ -632,19 +599,22 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
                           message title)))
       (start-process "osascript-send-notification" nil "osascript" "-e" script))))
 
+;; test
+;; (send-notification "Pomodoro Complete" "Take a break!")
 
-(send-notification "Pomodoro Complete" "Take a break!")
 
-
-
-(after! org-pomodoro
+(use-package! org-pomodoro
+  :after org
+  :config
   (setq
    org-pomodoro-length 25
    org-pomodoro-short-break-length 5
-   ;; 完成一个时间段后，是否需要认为停止
+   ;; 完成一个时间段后，是否需要人为停止。如果设置了 org-pomodoro-manual-break为true，需要手动运行 org-pomodoro 结束当前周期，进入休息阶段
    ;; org-pomodoro-manual-break t
    org-pomodoro-keep-killed-pomodoro-time t
 
+   ;; 下载华为提示音: https://sc.chinaz.com/yinxiao/161008432362.htm
+   ;; 配置提示音频为 pomodoro 的提示音
    org-pomodoro-start-sound (concat +jk/resources-directory "/huawei.wav")
    org-pomodoro-finished-sound (concat +jk/resources-directory "/huawei.wav")
    org-pomodoro-overtime-sound (concat +jk/resources-directory "/huawei.wav")
@@ -660,7 +630,6 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
   (add-hook 'org-pomodoro-long-break-finished-hook
             (lambda ()
               (send-notification "Pomodoro Complete" "Long break is finished!")))
-
   )
 
 ;; be careful
@@ -751,3 +720,67 @@ Other buffer group by `centaur-tabs-get-group-name' with project name."
 
 (after! org
   (customize-set-variable 'org-anki-default-deck "my-target-deck"))
+
+(use-package! org-fc
+  :after org
+  :config
+  (require 'org-fc-keymap-hint)
+  (require 'org-fc-hydra)
+  (setq org-fc-directories `(,org-directory))
+  (map! :leader
+        (:prefix ("l" . "learning")
+         :desc "Review flash cards." "r" 'org-fc-review
+         :desc "Open a buffer showing the dashboard view." "d" 'org-fc-dashboard
+         (:prefix ("c" . "create")
+          :desc "Create a normal card." "n" 'org-fc-type-normal-init
+          :desc "Create a cloze card." "c" 'org-fc-type-cloze-init))))
+
+(defun dc/alert-android-notifications-notify (info)
+  "Send notifications using `android-notifications-notify'.
+`android-notifications-notify' is a built-in function in the native Emacs
+Android port."
+  (let ((title (or (plist-get info :title) "Android Notifications Alert"))
+        (body (or (plist-get info :message) ""))
+        (urgency (cdr (assq (plist-get info :severity)
+                            alert-notifications-priorities)))
+        (icon (or (plist-get info :icon) alert-default-icon))
+        (replaces-id (gethash (plist-get info :id) alert-notifications-ids)))
+    (android-notifications-notify
+     :title title
+     :body body
+     :urgency urgency
+     :icon icon
+     :replaces-id replaces-id)))
+
+(alert-define-style 'android-notifications :title "Android Notifications"
+                    :notifier #'dc/alert-android-notifications-notify)
+
+;; https://github.com/jwiegley/alert
+(use-package! alert
+   ;; :config (setq alert-default-style 'osx-notifier)
+   )
+
+(use-package! org-alert
+  :after org
+  :custom
+  ;; Use different backends depending on the platform
+  (alert-default-style (if (eq system-type 'android)
+                           'android-notifications
+                         'osx-notifier))
+  :config
+  ;; Setup timing
+  (setq org-alert-interval 30  ;; a timer which periodically calls org-alert-check (defaults to 300s).
+        org-alert-notify-cutoff 10 ;; controls how long before a scheduled event a notification should be sent (defaults to 10minutes).
+        org-alert-notify-after-event-cutoff 10 ;; controls how long after a scheduled event to continue sending notifications (defaults to 10minutes).
+        )
+
+  ;; Setup notification title (if using 'custom)
+  (setq org-alert-notification-title "Org Alert Reminder")
+
+  ;; Use non-greedy regular expression
+  (setq org-alert-time-match-string
+        "\\(?:SCHEDULED\\|DEADLINE\\):.*?<.*?\\([0-9]\\{2\\}:[0-9]\\{2\\}\\).*>")
+
+  ;; Enable org-alert
+  (org-alert-enable)
+  )
