@@ -571,6 +571,35 @@
                 org-ref-cite-onclick-function (lambda (_) (org-ref-citation-hydra/body))))
   )
 
+(when (eq system-type 'darwin)  ; Check if the system is Mac
+  (use-package! org-noter
+    ;; sequence should be respected as in org-pdftools description: org-noter then org-pdftools then org-noter-pdftools
+    :after org-roam
+    ;;:hook (org-roam . org-noter-mode)
+    ;;:init
+    :bind ("C-c n n" . org-noter)
+    :custom
+    ;; (setq org-noter-notes-window-location vertical-split) ; optional horizontal/vertical split
+    (org-noter-highlight-selected-text t)
+    :config
+    ;; Explictly load required modules
+    (require 'org-noter-pdf)
+    (require 'org-noter-dynamic-block)
+    ;; Your org-noter config...
+    (setq org-noter-notes-search-path '(+jk/paper-notes-directory)) ; optional
+    ;;(setq org-noter-default-notes-file-names '("Notes.org"))
+    ;;(setq org-noter-separate-notes-from-heading t)
+    ;; optional if nil it will turn off adding org-ids to notes so not to be cached with other org-roam nodes
+    (setq org-noter-pdftools-use-org-id nil)
+    (setq org-noter-max-short-selected-text-length 700000)
+    ;; (define-advice org-noter--insert-heading (:after (level title &optional newlines-number location) add-full-body-quote)
+    ;;   "Advice for org-noter--insert-heading.  When inserting a precise note insert the text of the note in the body as an org mode QUOTE block. =org-noter-max-short-length= should be set to a large value to short circuit the normal behavior:  =(setq org-noter-max-short-selected-text-length 80000)="
+    ;;   ;; this tells us it's a precise note that's being invoked.
+    ;;   (if (consp location)
+    ;;       (insert (format "#+BEGIN_QUOTE\n%s\n#+END_QUOTE" title))))
+    )
+  )
+
 (after! org
   (setq org-startup-with-latex-preview t) ; 默认启用LaTeX预览
   (add-to-list 'org-latex-packages-alist '("" "tcolorbox" t))
@@ -592,33 +621,6 @@
 (use-package! org-fragtog
   :after org
   :hook (org-mode . org-fragtog-mode))
-
-(use-package! org-noter
-  ;; sequence should be respected as in org-pdftools description: org-noter then org-pdftools then org-noter-pdftools
-  :after org-roam
-  ;;:hook (org-roam . org-noter-mode)
-  ;;:init
-  :bind ("C-c n n" . org-noter)
-  :custom
-  ;; (setq org-noter-notes-window-location vertical-split) ; optional horizontal/vertical split
-  (org-noter-highlight-selected-text t)
-  :config
-  ;; Explictly load required modules
-  (require 'org-noter-pdf)
-  (require 'org-noter-dynamic-block)
-  ;; Your org-noter config...
-  (setq org-noter-notes-search-path '(+jk/paper-notes-directory)) ; optional
-  ;;(setq org-noter-default-notes-file-names '("Notes.org"))
-  ;;(setq org-noter-separate-notes-from-heading t)
-  ;; optional if nil it will turn off adding org-ids to notes so not to be cached with other org-roam nodes
-  (setq org-noter-pdftools-use-org-id nil)
-  (setq org-noter-max-short-selected-text-length 700000)
-  ;; (define-advice org-noter--insert-heading (:after (level title &optional newlines-number location) add-full-body-quote)
-  ;;   "Advice for org-noter--insert-heading.  When inserting a precise note insert the text of the note in the body as an org mode QUOTE block. =org-noter-max-short-length= should be set to a large value to short circuit the normal behavior:  =(setq org-noter-max-short-selected-text-length 80000)="
-  ;;   ;; this tells us it's a precise note that's being invoked.
-  ;;   (if (consp location)
-  ;;       (insert (format "#+BEGIN_QUOTE\n%s\n#+END_QUOTE" title))))
-  )
 
 (defun send-notification (title message)
   "Send a macOS notification if on a macOS system."

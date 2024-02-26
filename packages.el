@@ -62,8 +62,8 @@
 
 (package! org-fragtog)
 
-(package! org-roam-ui)
 
+(package! org-roam-ui)
 (package! org-roam-bibtex)
 
 (package! org-noter  :recipe
