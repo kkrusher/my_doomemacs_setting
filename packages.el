@@ -58,21 +58,21 @@
 
 (package! ivy-bibtex)
 
-(package! org-ref)
 
 (package! org-fragtog)
 
-
-(package! org-roam-ui)
-(package! org-roam-bibtex)
-
-(package! org-noter  :recipe
-  (:host github
-   :repo "dmitrym0/org-noter-plus"
-   :branch "master"
-   :files ("*.el" "modules/*.el" "other/*.el")  ;; include modules and auxiliaries
-   ))
-
+(when (eq system-type 'darwin)  ; Check if the system is Mac
+  (package! org-roam)
+  (package! org-ref)
+  (package! org-roam-ui)
+  (package! org-roam-bibtex)
+  (package! org-noter  :recipe
+    (:host github
+     :repo "dmitrym0/org-noter-plus"
+     :branch "master"
+     :files ("*.el" "modules/*.el" "other/*.el")  ;; include modules and auxiliaries
+     ))
+  )
 
 ;; (package! chatgpt
 ;;   :recipe (:host github :repo "joshcho/ChatGPT.el" :files ("dist" "*.el")))
