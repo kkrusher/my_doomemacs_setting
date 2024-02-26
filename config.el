@@ -80,22 +80,19 @@
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
 
-;; (cond
-;;  ((string-equal system-type "darwin")   ; macOS
-;;   (setq org-directory (concat user-directory "my_org-files/")))
-;;  ((string-equal system-type "gnu/linux") ; Android (Termux)
-;;   (setq org-directory "/sdcard/p9fqy-76ejy")))
+(cond
+ ;; macOS 系统
+ ((string-equal system-type "darwin")
+  (setq user-directory "/Users/k/")
+  ;; (setq user-directory "/home/k/")
+  (setq org-directory (concat user-directory "my_org-files/"))
+  (setq +jk/doom-directory (concat user-directory ".config/doom/")))
 
-(setq user-directory "/Users/k/")
-;; (setq user-directory "/home/k/")
-(setq org-directory (concat user-directory "my_org-files/"))
-(setq +jk/doom-directory  (concat user-directory ".config/doom/"))
-
-
-
-;; (setq user-directory "/data/data/org.gnu.emacs/files/")
-;; (setq org-directory "/sdcard/p9fqy-76ejy")
-(setq +jk/doom-directory  (concat user-directory ".doom.d/"))
+ ;; Android 系统 (在 Termux 中)
+ ((string-equal system-type "gnu/linux")
+  (setq user-directory "/data/data/org.gnu.emacs/files/")
+  (setq org-directory "/sdcard/p9fqy-76ejy")
+  (setq +jk/doom-directory (concat user-directory ".doom.d/"))))
 
 (setq +jk/doom-config-el (concat +jk/doom-directory "/config.el"))
 (setq +jk/doom-config-org (concat org-directory "/resources/config.org"))
@@ -205,15 +202,16 @@
   (org-element-update-syntax)
   )
 
-;; ;; Automatically tangle our Emacs.org config file when we save it
-;; (defun efs/org-babel-tangle-config ()
-;;   (when (string-equal (buffer-file-name)
-;;                       (expand-file-name +jk/doom-config-org))
-;;     ;; Dynamic scoping to the rescue
-;;     (let ((org-confirm-babel-evaluate nil))
-;;       (org-babel-tangle))))
+;; Automatically tangle our Emacs.org config file when we save it
+(defun efs/org-babel-tangle-config ()
+  (when (and (eq system-type 'darwin)
+             (string-equal (buffer-file-name)
+                           (expand-file-name +jk/doom-config-org)))
+    ;; Dynamic scoping to the rescue
+    (let ((org-confirm-babel-evaluate nil))
+      (org-babel-tangle))))
 
-;; (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
+(add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
 
 (after! treemacs
   ;;(map! "<f11>" #'treemacs)
@@ -287,7 +285,7 @@
                              (nil :maxlevel . 1)
                              (org-agenda-files :maxlevel . 1)
                              (,(directory-files-recursively org-directory "^[a-z0-9]*.org$") :maxlevel . 1)
-                            ;;  (,(directory-files-recursively +jk/doom-directory "^[a-z0-9]*.org$") :maxlevel . 1)
+                             (,(directory-files-recursively +jk/doom-directory "^[a-z0-9]*.org$") :maxlevel . 1)
                              ))
 
   (setq org-reverse-note-order t)
