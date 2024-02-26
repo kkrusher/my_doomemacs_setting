@@ -1,5 +1,5 @@
 ;;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
-
+;; qwwerasfafq
 ;; Place your private configuration here! Remember, you do not need to run 'doom
 ;; sync' after modifying this file!
 
@@ -24,6 +24,7 @@
 ;;(setq doom-font (font-spec :family "Fira Code" :size 12 :weight 'semi-light)
 ;;      doom-variable-pitch-font (font-spec :family "Fira Sans" :size 13))
 ;;
+
 (setq doom-font (font-spec :family "Iosevka SS09" :size 20 :weight 'semi-light)
       doom-variable-pitch-font (font-spec :family "MesloLGS NF" :size 13))
 ;; If you or Emacs can't find your font, use 'M-x describe-font' to look them
@@ -89,7 +90,7 @@
   (setq +jk/doom-directory (concat user-directory ".config/doom/")))
 
  ;; Android 系统 (在 Termux 中)
- ((string-equal system-type "gnu/linux")
+ ((string-equal system-type "android")
   (setq user-directory "/data/data/org.gnu.emacs/files/")
   (setq org-directory "/sdcard/p9fqy-76ejy")
   (setq +jk/doom-directory (concat user-directory ".doom.d/"))))
@@ -124,6 +125,10 @@
 
 (map! :leader
       :desc "Open default markdown file" "o m" #'open-default-markdown-file)
+
+;; 通过启用 visual-line-mode 来实现到达屏幕边缘时自动换行。visual-line-mode 是一个 minor mode，它会根据窗口大小而不是固定的列数来换行。
+(when (eq system-type 'android)
+  (add-hook! 'text-mode-hook 'visual-line-mode))
 
 ;; maximize the window on initialization
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
@@ -229,7 +234,9 @@
 
 ;; start treemacs on emacs startup
 ;; (add-hook! 'window-setup-hook #'treemacs 'append)
-(add-hook! 'window-setup-hook #'treemacs)
+
+(when (eq system-type 'darwin)
+  (add-hook! 'window-setup-hook #'treemacs))
 
 (after! org
 
