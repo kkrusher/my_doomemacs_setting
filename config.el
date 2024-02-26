@@ -91,8 +91,6 @@
 (setq org-directory (concat user-directory "my_org-files/"))
 (setq +jk/doom-directory  (concat user-directory ".config/doom/"))
 
-(setq +jk/onedrive-directory (concat user-directory  "OneDrive - nudt.edu.cn/"))
-(setq +jk/bibtex-pdf-file-directory (concat +jk/onedrive-directory "/Zotero/"))
 
 
 ;; (setq user-directory "/data/data/org.gnu.emacs/files/")
@@ -497,58 +495,6 @@
 (map! :leader
       "m m l" #'orb-insert-link)
 
-;; from org-ref manual
-(use-package! ivy-bibtex ;;
-  :init                 ;;
-  (setq bibtex-completion-bibliography (list +jk/bibtex-file) ;;
-        ;; If the BibTeX entries have a field that specifies the full path to the PDFs, that field can also be used. For example, JabRef and Zotero store the location of PDFs in a field called File:
-        bibtex-completion-pdf-field "file"
-        bibtex-completion-library-path (list +jk/bibtex-pdf-file-directory)
-        bibtex-completion-notes-path +jk/paper-notes-directory
-        bibtex-completion-notes-template-multiple-files "* ${author-or-editor}, ${title}, ${journal}, (${year}) :${=type=}: \n\nSee [[cite:&${=key=}]]\n"
-
-        bibtex-completion-additional-search-fields '(keywords)
-        bibtex-completion-display-formats
-        '((article       . "${=has-pdf=:1}${=has-note=:1} ${year:4} ${author:36} ${title:*} ${journal:40}")
-          (inbook        . "${=has-pdf=:1}${=has-note=:1} ${year:4} ${author:36} ${title:*} Chapter ${chapter:32}")
-          (incollection  . "${=has-pdf=:1}${=has-note=:1} ${year:4} ${author:36} ${title:*} ${booktitle:40}")
-          (inproceedings . "${=has-pdf=:1}${=has-note=:1} ${year:4} ${author:36} ${title:*} ${booktitle:40}")
-          (t             . "${=has-pdf=:1}${=has-note=:1} ${year:4} ${author:36} ${title:*}"))
-        bibtex-completion-pdf-open-function
-        (lambda (fpath)
-          (call-process "open" nil 0 nil fpath))))
-
-
-
-(use-package! org-ref
-  :init
-  (require 'bibtex)
-  (setq bibtex-autokey-year-length 4
-        bibtex-autokey-name-year-separator "-"
-        ;;
-        bibtex-autokey-year-title-separator "-"
-        ;;
-        bibtex-autokey-titleword-separator "-"
-        ;;
-        bibtex-autokey-titlewords 2
-        ;;
-        bibtex-autokey-titlewords-stretch 1
-        ;;
-        bibtex-autokey-titleword-length 5)
-
-  (require 'org-ref-ivy)
-  (require 'org-ref-arxiv)
-  (require 'org-ref-scopus)
-  (require 'org-ref-wos))
-
-
-(use-package! org-ref-ivy
-  :init (setq org-ref-insert-link-function 'org-ref-insert-link-hydra/body
-              org-ref-insert-cite-function 'org-ref-cite-insert-ivy
-              org-ref-insert-label-function 'org-ref-insert-label-link
-              org-ref-insert-ref-function 'org-ref-insert-ref-link
-              org-ref-cite-onclick-function (lambda (_) (org-ref-citation-hydra/body))))
-
 (after! org
   (setq org-startup-with-latex-preview t) ; 默认启用LaTeX预览
   (add-to-list 'org-latex-packages-alist '("" "tcolorbox" t))
@@ -758,16 +704,18 @@ Android port."
      :icon icon
      :replaces-id replaces-id)))
 
-(alert-define-style 'android-notifications :title "Android Notifications"
-                    :notifier #'dc/alert-android-notifications-notify)
+
 
 ;; https://github.com/jwiegley/alert
 (use-package! alert
-   ;; :config (setq alert-default-style 'osx-notifier)
+   :config
+  ;;  (setq alert-default-style 'osx-notifier)
+   (alert-define-style 'android-notifications :title "Android Notifications"
+                    :notifier #'dc/alert-android-notifications-notify)
    )
 
 (use-package! org-alert
-  :after org
+  :after (org alert)
   :custom
   ;; Use different backends depending on the platform
   (alert-default-style (if (eq system-type 'android)
