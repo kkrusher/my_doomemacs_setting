@@ -104,15 +104,16 @@
            :repo "eyeinsky/org-anki"
            :files ("*.el")))
 
-;; (package! org-fc
-;;   :recipe (:host github
-;;            :repo "l3kn/org-fc"
-;;            :files (:defaults "awk" "demo.org")))
-
 (package! org-fc
-  :recipe (:local-repo "lisp/org-fc"
-           :build (:not compile)
+  :recipe (:host github
+           :repo "l3kn/org-fc"
            :files (:defaults "awk" "demo.org")))
+
+;; 如果想要开发调试这包，应该将/org-fc源代码clone到.config/doom/lisp/下，然后如下配置
+;; (package! org-fc
+;;   :recipe (:local-repo "lisp/org-fc"
+;;            :build (:not compile)
+;;            :files (:defaults "awk" "demo.org")))
 
 
 ;; https://github.com/doomemacs/doomemacs/blob/master/docs/getting_started.org#changing-a-recipe-for-an-included-package
