@@ -86,19 +86,19 @@
 ;;  ((string-equal system-type "gnu/linux") ; Android (Termux)
 ;;   (setq org-directory "/sdcard/p9fqy-76ejy")))
 
-;; (setq user-directory "/Users/k/")
-;; ;; (setq user-directory "/home/k/")
-;; (setq org-directory (concat user-directory "my_org-files/"))
-;; (setq +jk/doom-directory  (concat user-directory ".config/doom/"))
+(setq user-directory "/Users/k/")
+;; (setq user-directory "/home/k/")
+(setq org-directory (concat user-directory "my_org-files/"))
+(setq +jk/doom-directory  (concat user-directory ".config/doom/"))
 
 
 
-(setq user-directory "/data/data/org.gnu.emacs/files/")
-(setq org-directory "/sdcard/p9fqy-76ejy")
-;; (setq +jk/doom-directory  (concat user-directory ".doom.d/"))
+;; (setq user-directory "/data/data/org.gnu.emacs/files/")
+;; (setq org-directory "/sdcard/p9fqy-76ejy")
+(setq +jk/doom-directory  (concat user-directory ".doom.d/"))
 
-;; (setq +jk/doom-config-el (concat +jk/doom-directory "/config.el"))
-;; (setq +jk/doom-config-org (concat org-directory "/resources/config.org"))
+(setq +jk/doom-config-el (concat +jk/doom-directory "/config.el"))
+(setq +jk/doom-config-org (concat org-directory "/resources/config.org"))
 
 (setq +jk/agenda-directory org-directory)
 (setq +jk/org-capture-inbox-file (concat org-directory "/agenda/inbox.org"))
