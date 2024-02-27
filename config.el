@@ -25,8 +25,15 @@
 ;;      doom-variable-pitch-font (font-spec :family "Fira Sans" :size 13))
 ;;
 
-(setq doom-font (font-spec :family "Iosevka SS09" :size 20 :weight 'semi-light)
-      doom-variable-pitch-font (font-spec :family "MesloLGS NF" :size 13))
+(setq doom-font (font-spec :family "Iosevka SS09" :size (cond (NOT-ANDROID 20)
+                                                              (IS-ANDROID 40)
+                                                              (t 20))  :weight 'semi-light)
+      doom-variable-pitch-font (font-spec :family "MesloLGS NF" :size (cond (NOT-ANDROID 20)
+                                                                             (IS-ANDROID 40)
+                                                                             (t 20))))
+
+;; (setq doom-font (font-spec :family "Iosevka SS09" :size 20 :weight 'semi-light)
+;;       doom-variable-pitch-font (font-spec :family "MesloLGS NF" :size 13))
 ;; If you or Emacs can't find your font, use 'M-x describe-font' to look them
 ;; up, `M-x eval-region' to execute elisp code, and 'M-x doom/reload-font' to
 ;; refresh your font settings. If Emacs still can't find your font, it likely
@@ -116,25 +123,14 @@
   (delete-region beg end))
 (map! "s-x" #'cut-region)
 
-(defun open-default-markdown-file ()
-  "Open a specific Markdown file."
-  (interactive)
-  (find-file (concat +jk/resources-directory "/md2org.md"))
-  ;; 直接进入insert mode
-  (evil-insert-state)
-  )
-
-(map! :leader
-      :desc "Open default markdown file" "o m" #'open-default-markdown-file)
-
 ;; 通过启用 visual-line-mode 来实现到达屏幕边缘时自动换行。visual-line-mode 是一个 minor mode，它会根据窗口大小而不是固定的列数来换行。
 (when IS-ANDROID
   (add-hook! 'text-mode-hook #'visual-line-mode))
 
 ;; 在 text-mode-hook 中添加调试代码，每当进入 Text mode 时，都会在 Emacs 的 *Messages* 缓冲区中打印一条消息，表明该钩子已被执行。
-(add-hook 'text-mode-hook
-          (lambda ()
-            (message "text-mode-hook executed")))
+;; (add-hook 'text-mode-hook
+;;           (lambda ()
+;;             (message "text-mode-hook executed")))
 
 ;; maximize the window on initialization
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
@@ -201,6 +197,18 @@
                                               (find-file (concat +jk/doom-directory "/packages.el")))
       )
 
+;; 打开默认md文件
+(defun open-default-markdown-file ()
+  "Open a specific Markdown file."
+  (interactive)
+  (find-file (concat +jk/resources-directory "/md2org.md"))
+  ;; 直接进入insert mode
+  (evil-insert-state)
+  )
+
+(map! :leader
+      :desc "Open default markdown file" "o m" #'open-default-markdown-file)
+
 (setq doom-leader-key "M-SPC"
       doom-localleader-key "M-SPC m")
 
@@ -224,8 +232,10 @@
 ;; 设置中文字体。 测试： 将 直 言 判
 ;; https://emacs-china.org/t/doom-emacs/23513/8
 (defun my-cjk-font()
-  (dolist (charset '(kana han cjk-misc symbol bopomofo))
-    (set-fontset-font t charset (font-spec :family "STKaiti"))))
+  (dolist (charset '(kana han cjk-misc bopomofo))
+    (set-fontset-font t charset (font-spec :family "STKaiti")))
+  ;; 单独设置 symbol 字符集的字体
+  (set-fontset-font t 'symbol (font-spec :family "STKaiti")))
 
 (add-hook 'after-setting-font-hook #'my-cjk-font)
 
