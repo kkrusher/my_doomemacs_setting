@@ -184,6 +184,23 @@
 (map! :leader
       :desc "Find file in project" "f f" #'projectile-find-file)
 
+
+;; 设置打开常用的文档的快捷键
+(map! :leader
+      :desc "Open inbox.org" "o 1" #'(lambda ()
+                                       (interactive)
+                                       (find-file (concat org-directory "/agenda/inbox.org")))
+      :desc "Open resources/config.org" "o 2" #'(lambda ()
+                                                  (interactive)
+                                                  (find-file (concat org-directory "/resources/config.org")))
+      :desc "Open doom/init.el" "o 3" #'(lambda ()
+                                          (interactive)
+                                          (find-file (concat +jk/doom-directory "/init.el")))
+      :desc "Open doom/packages.el" "o 4" #'(lambda ()
+                                              (interactive)
+                                              (find-file (concat +jk/doom-directory "/packages.el")))
+      )
+
 (setq doom-leader-key "M-SPC"
       doom-localleader-key "M-SPC m")
 
@@ -601,6 +618,7 @@
     )
   )
 
+(when NOT-ANDROID
 (after! org
   (setq org-startup-with-latex-preview t) ; 默认启用LaTeX预览
   (add-to-list 'org-latex-packages-alist '("" "tcolorbox" t))
@@ -617,6 +635,7 @@
   (add-to-list 'org-latex-packages-alist '("" "url" t))
   (add-to-list 'org-latex-packages-alist '("" "subfig" t))
   )
+    )
 
 ;;Org mode supports inline image previews of LaTeX fragments. These can be toggled with C-c C-x C-l. org-fragtog automates this, so fragment previews are disabled for editing when your cursor steps onto them, and re-enabled when the cursor leaves.
 (use-package! org-fragtog
