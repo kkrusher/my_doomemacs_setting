@@ -285,105 +285,28 @@
   (add-hook! 'window-setup-hook #'treemacs))
 
 (after! org
-
   ;; 该功能允许在创建到 Org 文件或标题的链接时自动使用 ID。这意味着当你在 Org mode 中创建到另一个 Org 文件或某个特定标题的链接时，会自动生成并使用一个唯一 ID 作为链接的目标，而不是使用文件名和标题。
   (setq org-id-link-to-org-use-id t)
-  ;; replaced by snippets
-  ;; add an option to 'C-c C-,' for new template
-  ;; (add-to-list 'org-structure-template-alist '("R" . "src R"))
-  ;; (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
-  ;; (add-to-list 'org-structure-template-alist '("py" . "src python"))
-  ;; (add-to-list 'org-structure-template-alist '("" . "src json"))
 
   ;; 添加一个设置来确保每次打开 Org 文件时都启用内嵌图片的显示
   ;; 无需每个文件单独设置 #+STARTUP: inlineimages
   ;; 但是打开这个选项，当attachment中有除了图片以为的附件时，显示会出问题
   ;; (setq org-startup-with-inline-images t)
-
-  )
-
-(after! org
-  (setq org-file-apps
-        '((remote . emacs)
-          (system . "open %s")
-          ("ps.gz" . "gv %s")
-          ("eps.gz" . "gv %s")
-          ("dvi" . "xdvi %s")
-          ("fig" . "xfig %s")
-          (t . "open %s")))
-  ;;  (setq org-file-apps org-file-apps-macosx)
-  )
-
-(after! org-download
-  ;; doom 设置的默认值为"_%Y%m%d_%H%M%S"
-  (setq org-download-timestamp "_%Y%m%d_")
-  )
-
-(with-eval-after-load 'org
-  (remove-hook 'org-tab-first-hook #'+org-indent-maybe-h)
-  )
-
-(after! org
-  ;; when archive a subtree with inherited tags, add the inherited tags to the subtree after archive
-  (setq org-archive-subtree-add-inherited-tags t)
-
-  ;; Information to record when a task is refiled.
-  ;; (setq org-log-refile 'time)
-
-  ;; default value of org-refile-targets is
-  ;; ((nil :maxlevel . 3)
-  ;;  (org-agenda-files :maxlevel . 3))
-  ;;  but I want all org files in org-directory
-  (setq org-refile-targets `(
-                             (nil :maxlevel . 1)
-                             (org-agenda-files :maxlevel . 1)
-                             (,(directory-files-recursively org-directory "^[a-z0-9]*.org$") :maxlevel . 1)
-                             (,(directory-files-recursively +jk/doom-directory "^[a-z0-9]*.org$") :maxlevel . 1)
-                             ))
-
-  (setq org-reverse-note-order t)
-  )
-
-(after! org
-  ;; (setq org-todo-keywords
-  ;;       '((sequence "TODO(t)" "PROJ(p)" "LOOP(r)" "STRT(s!)" "WAIT(w@/!)" "HOLD(h)" "IDEA(i)" "|" "DONE(d!)" "KILL(k@)")
-  ;;         (sequence "[ ](T)" "[-](N)" "[?](W@/!)" "|" "[X](D!)")
-  ;;         (sequence "|" "OKAY(o)" "YES(y)" "NO(n)"))
-  ;;       )
-  (setq org-todo-keywords
-        '((sequence "TODO(t)" "PROJ(p)" "LOOP(r)" "NEXT(n)" "WAIT(w@/!)" "HOLD(h)" "IDEA(i)" "|" "DONE(d!)" "KILL(k@)")
-          )
-        )
-  )
-
-(after! org
-  ;; https://emacs.stackexchange.com/questions/29152/how-to-use-global-tags-list-when-tagging-text-files-with-org-mode-and-helm
-  ;; 设置补全时显示所有agenda文件中的tag
-  (setq org-complete-tags-always-offer-all-agenda-tags t)
-
-  ;;default tag list
-  (setq org-tag-persistent-alist '(("@work" . ?w)
-                                   ("@home" . ?h)
-                                   ("emacs" . ?E)
-                                   ("python" . ?P)
-                                   ("shell". ?S)
-                                   ("LLM")
-                                   ("zotero")
-                                   ))
   )
 
 (after! org
   (setq org-capture-templates
         '(("t" "Personal todo" entry
            (file +jk/org-capture-inbox-file)
-           "* TODO %u %? \n %i" :prepend t :empty-lines-after 2)
+           "* TODO %? \n Creation Time: %u \n %i" :prepend t :empty-lines-after 2)
           ("r" "To be read" entry
            (file +jk/org-capture-inbox-file)
-           "* TODO %u Paper title: %?\n %i \n" :prepend t :empty-lines-after 2)
+           "* TODO Paper title: %?\n Creation Time: %u \n %i \n" :prepend t :empty-lines-after 2)
           ("i" "Interrupted" entry
            (file +jk/org-capture-inbox-file)
-           "* TODO %u %? \n %i" :prepend t :clock-in t :clock-resume t :empty-lines-after 2)
-          ))
+           "* TODO %? \n Creation Time: %u \n %i" :prepend t :clock-in t :clock-resume t :empty-lines-after 2)
+          )))
+
   ;; (setq org-tab-first-hook '(+org-yas-expand-maybe-h
   ;;                          org-babel-hide-result-toggle-maybe
   ;;                          org-babel-header-arg-expand
@@ -391,13 +314,17 @@
   ;;                          +org-cycle-only-current-subtree-h)'
   ;;        )
 
-  )
-
 (after! org
-  ;; (setq org-agenda-files (list +jk/agenda-directory))
-  ;; (setq org-agenda-files (directory-files-recursively +jk/agenda-directory "org$"))
-  (setq org-agenda-files (directory-files-recursively org-directory "org$"))
+  ;; .stversions 文件夹是syncthing使用的版本控制和备份文件，不应该加入到agenda中，不然可能造成重复。
+  ;; 使用 directory-files-recursively 函数的第三个参数，它是一个正则表达式，用于排除不想包含的文件。但是我们要排除的是一个文件夹里的所有文件，因此需要通过函数改写。
+  (defun my/org-agenda-files-exclude-stversions (dir regexp)
+    "List all files in DIR that match REGEXP, excluding .stversions directory."
+    (let ((files (directory-files-recursively dir regexp)))
+      (seq-filter (lambda (file)
+                    (not (string-match-p "/\\.stversions/" file)))
+                  files)))
   ;; "org$"是用来匹配文件名以"org"结尾的正则表达式，即查找所有Org文件（.org扩展名）
+  (setq org-agenda-files (my/org-agenda-files-exclude-stversions org-directory "\\.org$"))
 
   (map! "<f1>" #'org-agenda)
 
@@ -494,6 +421,55 @@
   ;; 设置org-agenda-clockreport-mode
   (setq org-agenda-clockreport-parameter-plist '(:scope agenda-with-archives :stepskip0 t :link t :maxlevel 3 :fileskip0 t :formula % :hidefiles t))
 
+  )
+
+(after! org
+  ;; when archive a subtree with inherited tags, add the inherited tags to the subtree after archive
+  (setq org-archive-subtree-add-inherited-tags t)
+
+  ;; Information to record when a task is refiled.
+  ;; (setq org-log-refile 'time)
+
+  ;; default value of org-refile-targets is
+  ;; ((nil :maxlevel . 3)
+  ;;  (org-agenda-files :maxlevel . 3))
+  ;;  but I want all org files in org-directory
+  (setq org-refile-targets `(
+                             (nil :maxlevel . 1)
+                             (org-agenda-files :maxlevel . 1)
+                             ;; (,(directory-files-recursively org-directory "^[a-z0-9]*.org$") :maxlevel . 1)
+                             (,(directory-files-recursively +jk/doom-directory "^[a-z0-9]*.org$") :maxlevel . 1)
+                             ))
+
+  (setq org-reverse-note-order t)
+  )
+
+(after! org
+  ;; (setq org-todo-keywords
+  ;;       '((sequence "TODO(t)" "PROJ(p)" "LOOP(r)" "STRT(s!)" "WAIT(w@/!)" "HOLD(h)" "IDEA(i)" "|" "DONE(d!)" "KILL(k@)")
+  ;;         (sequence "[ ](T)" "[-](N)" "[?](W@/!)" "|" "[X](D!)")
+  ;;         (sequence "|" "OKAY(o)" "YES(y)" "NO(n)"))
+  ;;       )
+  (setq org-todo-keywords
+        '((sequence "TODO(t)" "PROJ(p)" "LOOP(r)" "NEXT(n)" "WAIT(w@/!)" "HOLD(h)" "IDEA(i)" "|" "DONE(d!)" "KILL(k@)")
+          )
+        )
+  )
+
+(after! org
+  ;; https://emacs.stackexchange.com/questions/29152/how-to-use-global-tags-list-when-tagging-text-files-with-org-mode-and-helm
+  ;; 设置补全时显示所有agenda文件中的tag
+  (setq org-complete-tags-always-offer-all-agenda-tags t)
+
+  ;;default tag list
+  (setq org-tag-persistent-alist '(("@work" . ?w)
+                                   ("@home" . ?h)
+                                   ("emacs" . ?E)
+                                   ("python" . ?P)
+                                   ("shell". ?S)
+                                   ("LLM")
+                                   ("zotero")
+                                   ))
   )
 
 (when NOT-ANDROID  ; Check if the system is Mac
@@ -629,6 +605,27 @@
     ;;   (if (consp location)
     ;;       (insert (format "#+BEGIN_QUOTE\n%s\n#+END_QUOTE" title))))
     )
+  )
+
+(after! org-download
+  ;; doom 设置的默认值为"_%Y%m%d_%H%M%S"
+  (setq org-download-timestamp "_%Y%m%d_")
+  )
+
+(after! org
+  (setq org-file-apps
+        '((remote . emacs)
+          (system . "open %s")
+          ("ps.gz" . "gv %s")
+          ("eps.gz" . "gv %s")
+          ("dvi" . "xdvi %s")
+          ("fig" . "xfig %s")
+          (t . "open %s")))
+  ;;  (setq org-file-apps org-file-apps-macosx)
+  )
+
+(with-eval-after-load 'org
+  (remove-hook 'org-tab-first-hook #'+org-indent-maybe-h)
   )
 
 (when NOT-ANDROID
@@ -808,12 +805,15 @@ Android port."
                             alert-notifications-priorities)))
         (icon (or (plist-get info :icon) alert-default-icon))
         (replaces-id (gethash (plist-get info :id) alert-notifications-ids)))
+    (message "dc/alert-android-notifications-notify called with arg: %s" info)
     (android-notifications-notify
      :title title
      :body body
      :urgency urgency
      :icon icon
-     :replaces-id replaces-id)))
+     :replaces-id replaces-id)
+    (message "finished my function...")
+    ))
 
 ;; https://github.com/jwiegley/alert
 (use-package! alert
@@ -829,12 +829,17 @@ Android port."
 (use-package! org-wild-notifier
   :after (org alert)
   :custom
-  (alert-default-style (cond ((eq system-type 'darwin) 'osx-notifier)
+  (alert-default-style (cond ((eq system-type 'darwin) 'android-notifications)
                              ((eq system-type 'gnu/linux) 'libnotify)
                              ((eq system-type 'android) 'android-notifications)
                              (t 'message)))
+  ;; (alert-default-style (cond ((eq system-type 'darwin) 'osx-notifier)
+  ;;                            ((eq system-type 'gnu/linux) 'libnotify)
+  ;;                            ((eq system-type 'android) 'android-notifications)
+  ;;                            (t 'message)))
   :config
-  (setq org-wild-notifier-alert-time '(1 5 15 60)) ; 提醒时间点，单位为分钟
+  (setq org-wild-notifier-alert-time '(1 2 3 4 5 6 7 8 9 10 15 60)) ; 提醒时间点，单位为分钟
+  (setq alert-fade-time 30)
   (org-wild-notifier-mode)
   )
 
