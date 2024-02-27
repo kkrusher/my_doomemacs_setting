@@ -234,10 +234,11 @@
 ;; 设置中文字体。 测试： 将 直 言 判
 ;; https://emacs-china.org/t/doom-emacs/23513/8
 (defun my-cjk-font()
-  (dolist (charset '(kana han cjk-misc bopomofo))
-    (set-fontset-font t charset (font-spec :family "LXGW WenKai")))
-  ;; 单独设置 symbol 字符集的字体
-  (set-fontset-font t 'symbol (font-spec :family "LXGW WenKai")))
+  (let ((font-name (cond (NOT-ANDROID "STKaiti")
+                         (IS-ANDROID "LXGW WenKai")
+                         (t "STKaiti"))))
+    (dolist (charset '(kana han cjk-misc symbol bopomofo))
+      (set-fontset-font t charset (font-spec :family font-name)))))
 
 (add-hook 'after-setting-font-hook #'my-cjk-font)
 
@@ -814,8 +815,6 @@ Android port."
      :icon icon
      :replaces-id replaces-id)))
 
-
-
 ;; https://github.com/jwiegley/alert
 (use-package! alert
    :config
@@ -824,29 +823,23 @@ Android port."
                     :notifier #'dc/alert-android-notifications-notify)
    )
 
-(use-package! org-alert
+
+
+
+(use-package! org-wild-notifier
   :after (org alert)
   :custom
-  ;; Use different backends depending on the platform
-  (alert-default-style (if (eq system-type 'android)
-                           'android-notifications
-                         'osx-notifier))
+  (alert-default-style (cond ((eq system-type 'darwin) 'osx-notifier)
+                             ((eq system-type 'gnu/linux) 'libnotify)
+                             ((eq system-type 'android) 'android-notifications)
+                             (t 'message)))
   :config
-  ;; Setup timing
-  (setq org-alert-interval 30  ;; a timer which periodically calls org-alert-check (defaults to 300s).
-        org-alert-notify-cutoff 10 ;; controls how long before a scheduled event a notification should be sent (defaults to 10minutes).
-        org-alert-notify-after-event-cutoff 10 ;; controls how long after a scheduled event to continue sending notifications (defaults to 10minutes).
-        )
-
-  ;; Setup notification title (if using 'custom)
-  (setq org-alert-notification-title "Org Alert Reminder")
-
-  ;; Use non-greedy regular expression
-  (setq org-alert-time-match-string
-        "\\(?:SCHEDULED\\|DEADLINE\\):.*?<.*?\\([0-9]\\{2\\}:[0-9]\\{2\\}\\).*>")
-
-  ;; Enable org-alert
-  ;; 在配置中打开org-alert会导致org mode文件渲染的问题，应该是和org-modern等用来美化org mode的包不兼容
-  ;; 如果需要的话，尝试手动打开
-  ;; (org-alert-enable)
+  (setq org-wild-notifier-alert-time '(1 5 15 60)) ; 提醒时间点，单位为分钟
+  (org-wild-notifier-mode)
   )
+
+;; (      org-wild-notifier-keyword-whitelist nil
+;;       ;; good for testing
+;;       org-wild-notifier--alert-severity 'high
+;;       alert-fade-time 50
+;;       )

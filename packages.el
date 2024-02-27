@@ -74,7 +74,9 @@
 ;;            :build (:not compile)
 ;;            :files (:defaults "awk" "demo.org")))
 (package! alert)
-(package! org-alert)
+;; (package! org-alert)
+(package! org-wild-notifier)
+
 
 
 (when NOT-ANDROID
