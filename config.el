@@ -817,38 +817,39 @@ Android port."
     ))
 
 ;; https://github.com/jwiegley/alert
-;; (use-package! alert
-;;    :config
-;;   ;;  (setq alert-default-style 'osx-notifier)
-;;    (alert-define-style 'android-notifications :title "Android Notifications"
-;;                     :notifier #'dc/alert-android-notifications-notify)
-;;    )
-
-
-
-
-(use-package! org-wild-notifier
-  :after (org alert)
-  :init
+(use-package! alert
+   :config
+  ;;  (setq alert-default-style 'osx-notifier)
    (alert-define-style 'android-notifications :title "Android Notifications"
                     :notifier #'dc/alert-android-notifications-notify)
+   )
+
+;; org-alert包本身有bug
+(use-package! org-alert
+  :after (org alert)
   :custom
-  (alert-default-style (cond ((eq system-type 'darwin) 'android-notifications)
+  ;; Use different backends depending on the platform
+  (alert-default-style (cond ((eq system-type 'darwin) 'osx-notifier)
                              ((eq system-type 'gnu/linux) 'libnotify)
                              ((eq system-type 'android) 'android-notifications)
                              (t 'message)))
-  ;; (alert-default-style (cond ((eq system-type 'darwin) 'osx-notifier)
-  ;;                            ((eq system-type 'gnu/linux) 'libnotify)
-  ;;                            ((eq system-type 'android) 'android-notifications)
-  ;;                            (t 'message)))
-  :config
-  (setq org-wild-notifier-alert-time '(1 2 3 4 5 6 7 8 9 10 15 60)) ; 提醒时间点，单位为分钟
-  (setq alert-fade-time 30)
-  (org-wild-notifier-mode)
-  )
 
-;; (      org-wild-notifier-keyword-whitelist nil
-;;       ;; good for testing
-;;       org-wild-notifier--alert-severity 'high
-;;       alert-fade-time 50
-;;       )
+  :config
+  ;; Setup timing
+  (setq org-alert-interval 10  ;; a timer which periodically calls org-alert-check (defaults to 300s).
+        org-alert-notify-cutoff 5 ;; controls how long before a scheduled event a notification should be sent (defaults to 10minutes).
+        org-alert-notify-after-event-cutoff 10 ;; controls how long after a scheduled event to continue sending notifications (defaults to 10minutes).
+        )
+
+  ;; Setup notification title (if using 'custom)
+  (setq org-alert-notification-title "Org Alert Reminder")
+
+  ;; Use non-greedy regular expression
+  (setq org-alert-time-match-string
+        "\\(?:SCHEDULED\\|DEADLINE\\):.*?<.*?\\([0-9]\\{2\\}:[0-9]\\{2\\}\\).*>")
+
+  ;; Enable org-alert
+  ;; BUG 在配置中打开org-alert会导致org mode文件渲染的问题，应该是和org-modern等用来美化org mode的包不兼容
+  ;; 如果需要的话，尝试手动打开
+  (org-alert-enable)
+  )
