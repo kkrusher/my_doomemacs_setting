@@ -836,13 +836,13 @@ Android port."
 
   :config
   ;; Setup timing
-  (setq org-alert-interval 10  ;; a timer which periodically calls org-alert-check (defaults to 300s).
-        org-alert-notify-cutoff 5 ;; controls how long before a scheduled event a notification should be sent (defaults to 10minutes).
+  (setq org-alert-interval 300  ;; a timer which periodically calls org-alert-check (defaults to 300s).
+        org-alert-notify-cutoff 10 ;; controls how long before a scheduled event a notification should be sent (defaults to 10minutes).
         org-alert-notify-after-event-cutoff 10 ;; controls how long after a scheduled event to continue sending notifications (defaults to 10minutes).
         )
 
   ;; Setup notification title (if using 'custom)
-  (setq org-alert-notification-title "Org Alert Reminder")
+  (setq org-alert-notification-title "Org")
 
   ;; Use non-greedy regular expression
   (setq org-alert-time-match-string
