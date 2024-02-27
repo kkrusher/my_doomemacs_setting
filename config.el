@@ -209,14 +209,14 @@
 (map! :leader
       :desc "Open default markdown file" "o m" #'open-default-markdown-file)
 
-(setq doom-leader-key "M-SPC"
-      doom-localleader-key "M-SPC m"
-      doom-leader-alt-key "M-SPC"
-      doom-localleader-alt-key "M-SPC m")
+(setq doom-leader-key "C-SPC"
+      doom-localleader-key "C-SPC m"
+      doom-leader-alt-key "C-SPC"
+      doom-localleader-alt-key "C-SPC m")
 
-;; open "M-x" by "M-SPC M-SPC"
+;; open "M-x" by "C-SPC C-SPC"
 (map! :leader
-      :desc "Open like spacemacs" "M-SPC" #'execute-extended-command)
+      :desc "Open like spacemacs" "C-SPC" #'execute-extended-command)
 
 ;; Kicked out of insert mode when typing 'fd' quickly
 ;; https://github.com/doomemacs/doomemacs/issues/1946
@@ -796,8 +796,8 @@
           :desc "Create a cloze card." "c" 'org-fc-type-cloze-init))))
 
 (defun dc/alert-android-notifications-notify (info)
-  "Send notifications using `android-notifications-notify'.
-`android-notifications-notify' is a built-in function in the native Emacs
+  "Send notifications using android-notifications-notify.
+android-notifications-notify is a built-in function in the native Emacs
 Android port."
   (let ((title (or (plist-get info :title) "Android Notifications Alert"))
         (body (or (plist-get info :message) ""))
@@ -806,6 +806,7 @@ Android port."
         (icon (or (plist-get info :icon) alert-default-icon))
         (replaces-id (gethash (plist-get info :id) alert-notifications-ids)))
     (message "dc/alert-android-notifications-notify called with arg: %s" info)
+    (message "dc/alert-android-notifications-notify called with title: %s body: %s urgency: %s icon: %s replaces-id: %s" title body urgency icon replaces-id)
     (android-notifications-notify
      :title title
      :body body
@@ -816,18 +817,21 @@ Android port."
     ))
 
 ;; https://github.com/jwiegley/alert
-(use-package! alert
-   :config
-  ;;  (setq alert-default-style 'osx-notifier)
-   (alert-define-style 'android-notifications :title "Android Notifications"
-                    :notifier #'dc/alert-android-notifications-notify)
-   )
+;; (use-package! alert
+;;    :config
+;;   ;;  (setq alert-default-style 'osx-notifier)
+;;    (alert-define-style 'android-notifications :title "Android Notifications"
+;;                     :notifier #'dc/alert-android-notifications-notify)
+;;    )
 
 
 
 
 (use-package! org-wild-notifier
   :after (org alert)
+  :init
+   (alert-define-style 'android-notifications :title "Android Notifications"
+                    :notifier #'dc/alert-android-notifications-notify)
   :custom
   (alert-default-style (cond ((eq system-type 'darwin) 'android-notifications)
                              ((eq system-type 'gnu/linux) 'libnotify)
