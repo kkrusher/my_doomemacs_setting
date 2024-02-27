@@ -128,9 +128,8 @@
       :desc "Open default markdown file" "o m" #'open-default-markdown-file)
 
 ;; 通过启用 visual-line-mode 来实现到达屏幕边缘时自动换行。visual-line-mode 是一个 minor mode，它会根据窗口大小而不是固定的列数来换行。
-(when (eq system-type 'android)
+(when IS-ANDROID
   (add-hook! 'text-mode-hook #'visual-line-mode))
-
 
 ;; 在 text-mode-hook 中添加调试代码，每当进入 Text mode 时，都会在 Emacs 的 *Messages* 缓冲区中打印一条消息，表明该钩子已被执行。
 (add-hook 'text-mode-hook
@@ -172,7 +171,8 @@
               (evil-insert-state))))
 
 ;; set undo
-(global-set-key (kbd "C-z") 'undo)
+(when NOT-ANDROID
+  (global-set-key (kbd "C-z") 'undo))
 
 (map!
  :g "s-w"       #'kill-this-buffe
