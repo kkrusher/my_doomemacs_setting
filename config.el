@@ -209,12 +209,14 @@
 (map! :leader
       :desc "Open default markdown file" "o m" #'open-default-markdown-file)
 
-(setq doom-leader-key "M-SPC"
-      doom-localleader-key "M-SPC m")
+(setq doom-leader-key "S-SPC"
+      doom-localleader-key "S-SPC m"
+      doom-leader-alt-key "S-SPC"
+      doom-localleader-alt-key "S-SPC m")
 
 ;; open "M-x" by "M-SPC M-SPC"
 (map! :leader
-      :desc "Open like spacemacs" "M-SPC" #'execute-extended-command)
+      :desc "Open like spacemacs" "S-SPC" #'execute-extended-command)
 
 ;; Kicked out of insert mode when typing 'fd' quickly
 ;; https://github.com/doomemacs/doomemacs/issues/1946
