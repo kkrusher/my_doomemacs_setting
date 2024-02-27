@@ -54,14 +54,32 @@
 
 ;; pinned version of org mode have bugs
 (unpin! org)
+(package! org-web-tools)
+(package! org-pandoc-import
+  :recipe (:host github
+           :repo "tecosaur/org-pandoc-import"
+           :files ("*.el" "filters" "preprocessors")))
+(package! org-modern)
+(package! org-anki
+  :recipe (:host github
+           :repo "eyeinsky/org-anki"
+           :files ("*.el")))
+(package! org-fc
+  :recipe (:host github
+           :repo "l3kn/org-fc"
+           :files (:defaults "awk" "demo.org")))
+;; 如果想要开发调试这包，应该将/org-fc源代码clone到.config/doom/lisp/下，然后如下配置
+;; (package! org-fc
+;;   :recipe (:local-repo "lisp/org-fc"
+;;            :build (:not compile)
+;;            :files (:defaults "awk" "demo.org")))
+(package! alert)
+(package! org-alert)
 
 
-(package! ivy-bibtex)
-
-
-(package! org-fragtog)
-
-(when (eq system-type 'darwin)  ; Check if the system is Mac
+(when NOT-ANDROID
+  (package! ivy-bibtex)
+  (package! org-fragtog)
   (package! org-roam)
   (package! org-ref)
   (package! org-roam-ui)
@@ -71,50 +89,22 @@
      :repo "dmitrym0/org-noter-plus"
      :branch "master"
      :files ("*.el" "modules/*.el" "other/*.el")  ;; include modules and auxiliaries
-     ))
+     )))
+(unless NOT-ANDROID
+  (package! ivy-bibtex :disable t)
+  (package! org-fragtog :disable t)
+  (package! org-roam :disable t)
+  (package! org-ref :disable t)
+  (package! org-roam-ui :disable t)
+  (package! org-roam-bibtex :disable t)
+  (package! org-noter :disable t)
   )
 
-;; (package! chatgpt
-;;   :recipe (:host github :repo "joshcho/ChatGPT.el" :files ("dist" "*.el")))
-
-;; (package! org-download)
-
 (package! ebdb)
-
-
-(package! org-web-tools)
-
-
-(package! org-pandoc-import
-  :recipe (:host github
-           :repo "tecosaur/org-pandoc-import"
-           :files ("*.el" "filters" "preprocessors")))
-
-(package! org-modern)
-
-
 (package! sis
   :recipe (:host github
            :repo "laishulu/emacs-smart-input-source"
            :files ("*.el")))
-
-
-(package! org-anki
-  :recipe (:host github
-           :repo "eyeinsky/org-anki"
-           :files ("*.el")))
-
-(package! org-fc
-  :recipe (:host github
-           :repo "l3kn/org-fc"
-           :files (:defaults "awk" "demo.org")))
-
-;; 如果想要开发调试这包，应该将/org-fc源代码clone到.config/doom/lisp/下，然后如下配置
-;; (package! org-fc
-;;   :recipe (:local-repo "lisp/org-fc"
-;;            :build (:not compile)
-;;            :files (:defaults "awk" "demo.org")))
-
 
 ;; https://github.com/doomemacs/doomemacs/blob/master/docs/getting_started.org#changing-a-recipe-for-an-included-package
 ;; If a Doom module installs package X from one place, but you’d like to install it from another (say, a superior fork),
@@ -124,14 +114,8 @@
   :recipe (:host github
            :repo "tumashu/pyim"
            :files ("*.el")))
-
 (package! pyim-basedict
   :recipe (:host github
            :repo "tumashu/pyim-basedict"
            :files ("*")))
-
-
 (package! highlight-parentheses)
-
-(package! alert)
-(package! org-alert)

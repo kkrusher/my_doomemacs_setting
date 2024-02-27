@@ -466,7 +466,7 @@
   )
 
 (when (eq system-type 'darwin)  ; Check if the system is Mac
-  (after! org
+  (after! org-roam
     (setq org-roam-directory org-directory)
     (setq org-roam-index-file (concat +jk/org-roam-directory "index.org"))
     ;; 使org agenda显示.org_archive文件中的todo entry

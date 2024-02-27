@@ -15,6 +15,11 @@
 ;;      directory (for easy access to its source code).
 ;; https://github.com/doomemacs/doomemacs/blob/master/docs/modules.org
 
+
+(defconst NOT-ANDROID (not (eq system-type 'android)))
+(defconst IS-ANDROID (eq system-type 'android))
+
+
 (doom! :input
        ;;bidi              ; (tfel ot) thgir etirw uoy gnipleh
        chinese
@@ -100,7 +105,8 @@
        magit             ; a git porcelain for Emacs
        ;;make              ; run make tasks from Emacs
        ;;pass              ; password manager for nerds
-       pdf               ; pdf enhancements
+       (:if NOT-ANDROID pdf)               ; pdf enhancements
+       ;; pdf               ; pdf enhancements
        ;;prodigy           ; FIXME managing external services & code builders
        ;;rgb               ; creating color strings
        ;;taskrunner        ; taskrunner for all your projects
@@ -110,7 +116,7 @@
        ;;upload            ; map local to remote projects via ssh/ftp
 
        :os
-       (:if IS-MAC macos)  ; improve compatibility with macOS
+       (:if (featurep :system 'macos) macos) ; improve compatibility with macOS
        ;;tty               ; improve the terminal Emacs experience
 
        :lang
@@ -146,7 +152,8 @@
        ;;javascript        ; all(hope(abandon(ye(who(enter(here))))))
        ;;julia             ; a better, faster MATLAB
        ;;kotlin            ; a better, slicker Java(Script)
-       (latex +lsp)             ; writing papers in Emacs has never been so fun
+       (:if NOT-ANDROID (latex +lsp))
+       ;; (latex +lsp)             ; writing papers in Emacs has never been so fun
        lean              ; for folks with too much to prove
        ;;ledger            ; be audit you can be
        lua               ; one-based indices? one-based indices
@@ -154,7 +161,10 @@
        ;;nim               ; python + lisp at the speed of c
        ;;nix               ; I hereby declare "nix geht mehr!"
        ;;ocaml             ; an objective camel
-       (org +pretty +dragndrop +pomodoro +pandoc)               ; organize your plain life in plain text
+       (:if NOT-ANDROID
+           (org +roam2 +pretty +dragndrop +pomodoro +pandoc)
+         (org +pretty +dragndrop +pomodoro +pandoc))
+       ;; (org +pretty +dragndrop +pomodoro +pandoc)               ; organize your plain life in plain text
        ;; (org +roam2 +pretty +dragndrop +pomodoro +pandoc)               ; organize your plain life in plain text
        ;;php               ; perl's insecure younger brother
        ;;plantuml          ; diagrams for confusing people more
