@@ -83,14 +83,15 @@
 
 (cond
  ;; macOS 系统
- ((string-equal system-type "darwin")
+ (NOT-ANDROID
   (setq user-directory "/Users/k/")
   ;; (setq user-directory "/home/k/")
   (setq org-directory (concat user-directory "my_org-files/"))
   (setq +jk/doom-directory (concat user-directory ".config/doom/")))
 
- ;; Android 系统 (在 Termux 中)
- ((string-equal system-type "android")
+ ;; Android 系统 (android native emacs而不是termux中的)
+ (IS-ANDROID
+  (string-equal system-type "android")
   (setq user-directory "/data/data/org.gnu.emacs/files/")
   (setq org-directory "/sdcard/p9fqy-76ejy")
   (setq +jk/doom-directory (concat user-directory ".doom.d/"))))
@@ -224,7 +225,7 @@
 
 ;; Automatically tangle our Emacs.org config file when we save it
 (defun efs/org-babel-tangle-config ()
-  (when (and (eq system-type 'darwin)
+  (when (and NOT-ANDROID
              (string-equal (buffer-file-name)
                            (expand-file-name +jk/doom-config-org)))
     ;; Dynamic scoping to the rescue
@@ -250,7 +251,7 @@
 ;; start treemacs on emacs startup
 ;; (add-hook! 'window-setup-hook #'treemacs 'append)
 
-(when (eq system-type 'darwin)
+(when NOT-ANDROID
   (add-hook! 'window-setup-hook #'treemacs))
 
 (after! org
@@ -465,7 +466,7 @@
 
   )
 
-(when (eq system-type 'darwin)  ; Check if the system is Mac
+(when NOT-ANDROID  ; Check if the system is Mac
   (after! org-roam
     (setq org-roam-directory org-directory)
     (setq org-roam-index-file (concat +jk/org-roam-directory "index.org"))
@@ -486,7 +487,7 @@
           org-roam-ui-open-on-start t))
   )
 
-(when (eq system-type 'darwin)  ; Check if the system is Mac
+(when NOT-ANDROID  ; Check if the system is Mac
   (use-package! org-roam-bibtex
     :after (org-roam)
     :init
@@ -518,7 +519,7 @@
         "m m l" #'orb-insert-link)
   )
 
-(when (eq system-type 'darwin)  ; Check if the system is Mac
+(when NOT-ANDROID  ; Check if the system is Mac
   (setq +jk/onedrive-directory (concat user-directory  "OneDrive - nudt.edu.cn/"))
   (setq +jk/bibtex-pdf-file-directory (concat +jk/onedrive-directory "/Zotero/"))
 
@@ -571,7 +572,7 @@
                 org-ref-cite-onclick-function (lambda (_) (org-ref-citation-hydra/body))))
   )
 
-(when (eq system-type 'darwin)  ; Check if the system is Mac
+(when NOT-ANDROID  ; Check if the system is Mac
   (use-package! org-noter
     ;; sequence should be respected as in org-pdftools description: org-noter then org-pdftools then org-noter-pdftools
     :after org-roam
