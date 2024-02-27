@@ -209,14 +209,14 @@
 (map! :leader
       :desc "Open default markdown file" "o m" #'open-default-markdown-file)
 
-(setq doom-leader-key "S-SPC"
-      doom-localleader-key "S-SPC m"
-      doom-leader-alt-key "S-SPC"
-      doom-localleader-alt-key "S-SPC m")
+(setq doom-leader-key "M-SPC"
+      doom-localleader-key "M-SPC m"
+      doom-leader-alt-key "M-SPC"
+      doom-localleader-alt-key "M-SPC m")
 
 ;; open "M-x" by "M-SPC M-SPC"
 (map! :leader
-      :desc "Open like spacemacs" "S-SPC" #'execute-extended-command)
+      :desc "Open like spacemacs" "M-SPC" #'execute-extended-command)
 
 ;; Kicked out of insert mode when typing 'fd' quickly
 ;; https://github.com/doomemacs/doomemacs/issues/1946
@@ -235,9 +235,9 @@
 ;; https://emacs-china.org/t/doom-emacs/23513/8
 (defun my-cjk-font()
   (dolist (charset '(kana han cjk-misc bopomofo))
-    (set-fontset-font t charset (font-spec :family "STKaiti")))
+    (set-fontset-font t charset (font-spec :family "LXGW WenKai")))
   ;; 单独设置 symbol 字符集的字体
-  (set-fontset-font t 'symbol (font-spec :family "STKaiti")))
+  (set-fontset-font t 'symbol (font-spec :family "LXGW WenKai")))
 
 (add-hook 'after-setting-font-hook #'my-cjk-font)
 
