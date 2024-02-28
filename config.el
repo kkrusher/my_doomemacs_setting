@@ -88,6 +88,49 @@
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
 
+;; maximize the window on initialization
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
+
+;; add scroll bar
+(scroll-bar-mode 1)
+
+;; disable confirm exit
+(setq confirm-kill-emacs nil)
+
+;; to support select and move by mouse
+(setq mouse-drag-and-drop-region t)
+
+;; auto-save-mode is somewhat a backup in temporary file named #<file_name>#, auto-save-visited-mode is actually auto save on related file
+(auto-save-visited-mode +1)
+
+;; load sessions from last leave
+;; cuurently have bugs, use "SPC q L" instead
+;; (add-hook! 'window-setup-hook #'doom/quickload-session)
+
+;; 启动emacs时自动进入inbox.org
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (find-file (concat org-directory "/agenda/inbox.org"))
+            (delete-other-windows)))
+
+
+;; 在所有可编辑模式下自动进入 insert 模式，你可以使用 derived-mode-p 函数来检查当前模式是否派生自 text-mode 或其他可编辑模式。
+;; find-file-hook 钩子在每次打开一个新文件时触发
+;; (add-hook 'find-file-hook
+;;           (lambda ()
+;;             (when (or (derived-mode-p 'text-mode)
+;;                       (derived-mode-p 'prog-mode))
+;;               (evil-insert-state))))
+(defun my-enter-evil-insert-state ()
+  (when (or (derived-mode-p 'text-mode)
+            (derived-mode-p 'prog-mode)
+            (derived-mode-p 'org-mode)
+            (derived-mode-p 'org-agenda-mode))  ; 添加 org-agenda-mode
+    (evil-insert-state)))
+
+(add-hook 'find-file-hook #'my-enter-evil-insert-state)
+(add-hook 'org-agenda-mode-hook #'my-enter-evil-insert-state)
+
 (cond
  ;; macOS 系统
  (NOT-ANDROID
@@ -114,62 +157,18 @@
 (setq +jk/bibtex-file (concat +jk/resources-directory "/MyLibrary.bib"))
 (setq +jk/paper-notes-directory (concat +jk/org-roam-directory "paper_notes/"))
 
-;; solve the problem of 'Cmd-x raise M-x rather than cut' problem
-;; https://github.com/doomemacs/doomemacs/issues/3860
-(defun cut-region (beg end)
-  "Copies the text to the kill buffer and deletes the selected region."
-  (interactive "r")
-  (copy-region-as-kill beg end)
-  (delete-region beg end))
-(map! "s-x" #'cut-region)
-
-;; 通过启用 visual-line-mode 来实现到达屏幕边缘时自动换行。visual-line-mode 是一个 minor mode，它会根据窗口大小而不是固定的列数来换行。
-(when IS-ANDROID
-  (add-hook! 'text-mode-hook #'visual-line-mode))
-
-;; 在 text-mode-hook 中添加调试代码，每当进入 Text mode 时，都会在 Emacs 的 *Messages* 缓冲区中打印一条消息，表明该钩子已被执行。
-;; (add-hook 'text-mode-hook
-;;           (lambda ()
-;;             (message "text-mode-hook executed")))
-
-;; maximize the window on initialization
-(add-to-list 'default-frame-alist '(fullscreen . maximized))
-
-;; add scroll bar
-(scroll-bar-mode 1)
-
-;; disable confirm exit
-(setq confirm-kill-emacs nil)
-
-;; to support select and move by mouse
-(setq mouse-drag-and-drop-region t)
-
-;; auto-save-mode is somewhat a backup in temporary file named #<file_name>#, auto-save-visited-mode is actually auto save on related file
-(auto-save-visited-mode +1)
-
-;; load sessions from last leave
-;; cuurently have bugs, use "SPC q L" instead
-;; (add-hook! 'window-setup-hook #'doom/quickload-session)
-
-
-(add-hook 'emacs-startup-hook
-          (lambda ()
-            (find-file (concat org-directory "/agenda/inbox.org"))
-            (delete-other-windows)))
-
-
-;; 在所有可编辑模式下自动进入 insert 模式，你可以使用 derived-mode-p 函数来检查当前模式是否派生自 text-mode 或其他可编辑模式。
-;; find-file-hook 钩子在每次打开一个新文件时触发
-(add-hook 'find-file-hook
-          (lambda ()
-            (when (or (derived-mode-p 'text-mode)
-                      (derived-mode-p 'prog-mode))
-              (evil-insert-state))))
+;; 因为=org-capture= 使用的比较多，所以对换doom emacs设置的两个按键，使用=x=来打开org capture
+(map! :leader
+      :desc "Org Capture" "x" #'org-capture
+      :desc "Pop up scratch buffer" "X" #'doom/open-scratch-buffer
+      )
 
 ;; set undo
 (when NOT-ANDROID
   (global-set-key (kbd "C-z") 'undo))
 
+
+;; 使用类似于mac的窗口管理快捷键管理buffer
 (map!
  :g "s-w"       #'kill-this-buffe
  :g "s-["       #'previous-buffer
@@ -205,7 +204,6 @@
   ;; 直接进入insert mode
   (evil-insert-state)
   )
-
 (map! :leader
       :desc "Open default markdown file" "o m" #'open-default-markdown-file)
 
@@ -218,10 +216,34 @@
 (map! :leader
       :desc "Open like spacemacs" "C-SPC" #'execute-extended-command)
 
-;; Kicked out of insert mode when typing 'fd' quickly
-;; https://github.com/doomemacs/doomemacs/issues/1946
-(after! evil-escape
-  (setq-default evil-escape-key-sequence "fd"))
+;; Automatically tangle our Emacs.org config file when we save it
+(defun efs/org-babel-tangle-config ()
+  (when (and NOT-ANDROID
+             (string-equal (buffer-file-name)
+                           (expand-file-name +jk/doom-config-org)))
+    ;; Dynamic scoping to the rescue
+    (let ((org-confirm-babel-evaluate nil))
+      (org-babel-tangle))))
+
+(add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
+
+;; solve the problem of 'Cmd-x raise M-x rather than cut' problem
+;; https://github.com/doomemacs/doomemacs/issues/3860
+(defun cut-region (beg end)
+  "Copies the text to the kill buffer and deletes the selected region."
+  (interactive "r")
+  (copy-region-as-kill beg end)
+  (delete-region beg end))
+(map! "s-x" #'cut-region)
+
+;; 通过启用 visual-line-mode 来实现到达屏幕边缘时自动换行。visual-line-mode 是一个 minor mode，它会根据窗口大小而不是固定的列数来换行。
+;; (when IS-ANDROID
+;;   (add-hook! 'text-mode-hook #'visual-line-mode))
+
+;; 在 text-mode-hook 中添加调试代码，每当进入 Text mode 时，都会在 Emacs 的 *Messages* 缓冲区中打印一条消息，表明该钩子已被执行。
+;; (add-hook 'text-mode-hook
+;;           (lambda ()
+;;             (message "text-mode-hook executed")))
 
 ;; https://github.com/doomemacs/doomemacs/issues/3108
 (after! gcmh
@@ -253,16 +275,10 @@
   (org-element-update-syntax)
   )
 
-;; Automatically tangle our Emacs.org config file when we save it
-(defun efs/org-babel-tangle-config ()
-  (when (and NOT-ANDROID
-             (string-equal (buffer-file-name)
-                           (expand-file-name +jk/doom-config-org)))
-    ;; Dynamic scoping to the rescue
-    (let ((org-confirm-babel-evaluate nil))
-      (org-babel-tangle))))
-
-(add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
+;; Kicked out of insert mode when typing 'fd' quickly
+;; https://github.com/doomemacs/doomemacs/issues/1946
+(after! evil-escape
+  (setq-default evil-escape-key-sequence "fd"))
 
 (after! treemacs
   ;;(map! "<f11>" #'treemacs)
@@ -837,8 +853,8 @@ Android port."
   :config
   ;; Setup timing
   (setq org-alert-interval 300  ;; a timer which periodically calls org-alert-check (defaults to 300s).
-        org-alert-notify-cutoff 10 ;; controls how long before a scheduled event a notification should be sent (defaults to 10minutes).
-        org-alert-notify-after-event-cutoff 10 ;; controls how long after a scheduled event to continue sending notifications (defaults to 10minutes).
+        org-alert-notify-cutoff 5 ;; controls how long before a scheduled event a notification should be sent (defaults to 10minutes).
+        org-alert-notify-after-event-cutoff 2 ;; controls how long after a scheduled event to continue sending notifications (defaults to 10minutes).
         )
 
   ;; Setup notification title (if using 'custom)
@@ -851,5 +867,7 @@ Android port."
   ;; Enable org-alert
   ;; BUG 在配置中打开org-alert会导致org mode文件渲染的问题，应该是和org-modern等用来美化org mode的包不兼容
   ;; 如果需要的话，尝试手动打开
-  (org-alert-enable)
+  ;; 这里设置只在android才默认打开
+  (when IS-ANDROID
+    (org-alert-enable))
   )
