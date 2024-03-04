@@ -121,3 +121,5 @@
            :repo "tumashu/pyim-basedict"
            :files ("*")))
 (package! highlight-parentheses)
+
+(package! golden-ratio)

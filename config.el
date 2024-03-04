@@ -29,8 +29,8 @@
                                                               (IS-ANDROID 40)
                                                               (t 20))  :weight 'semi-light)
       doom-variable-pitch-font (font-spec :family "MesloLGS NF" :size (cond (NOT-ANDROID 20)
-                                                                             (IS-ANDROID 40)
-                                                                             (t 20))))
+                                                                            (IS-ANDROID 40)
+                                                                            (t 20))))
 
 ;; (setq doom-font (font-spec :family "Iosevka SS09" :size 20 :weight 'semi-light)
 ;;       doom-variable-pitch-font (font-spec :family "MesloLGS NF" :size 13))
@@ -107,7 +107,7 @@
 ;; cuurently have bugs, use "SPC q L" instead
 ;; (add-hook! 'window-setup-hook #'doom/quickload-session)
 
-;; 启动emacs时自动进入inbox.org
+;; 启动 emacs 时自动进入 inbox.org
 (add-hook 'emacs-startup-hook
           (lambda ()
             (find-file (concat org-directory "/agenda/inbox.org"))
@@ -131,6 +131,20 @@
 (add-hook 'find-file-hook #'my-enter-evil-insert-state)
 (add-hook 'org-agenda-mode-hook #'my-enter-evil-insert-state)
 
+(defun +jk/convert-markdown-to-org-in-clipboard ()
+  "Convert Markdown text in clipboard to Org format using pandoc and update the clipboard."
+  (interactive)
+  (let ((markdown-text (gui-get-selection 'CLIPBOARD))
+        (org-text nil))
+    (with-temp-buffer
+      (insert markdown-text)
+      (shell-command-on-region (point-min) (point-max) "pandoc -f markdown -t org" (current-buffer) t)
+      (setq org-text (buffer-string)))
+    (gui-set-selection 'CLIPBOARD org-text)))
+
+(map! :leader
+      :desc "pandoc md2org" "a p" #' +jk/convert-markdown-to-org-in-clipboard)
+
 (cond
  ;; macOS 系统
  (NOT-ANDROID
@@ -139,7 +153,7 @@
   (setq org-directory (concat user-directory "my_org-files/"))
   (setq +jk/doom-directory (concat user-directory ".config/doom/")))
 
- ;; Android 系统 (android native emacs而不是termux中的)
+ ;; Android 系统 (android native emacs 而不是 termux 中的)
  (IS-ANDROID
   (string-equal system-type "android")
   (setq user-directory "/data/data/org.gnu.emacs/files/")
@@ -157,7 +171,7 @@
 (setq +jk/bibtex-file (concat +jk/resources-directory "/MyLibrary.bib"))
 (setq +jk/paper-notes-directory (concat +jk/org-roam-directory "paper_notes/"))
 
-;; 因为=org-capture= 使用的比较多，所以对换doom emacs设置的两个按键，使用=x=来打开org capture
+;; 因为=org-capture= 使用的比较多，所以对换 doom emacs 设置的两个按键，使用=x=来打开 org capture
 (map! :leader
       :desc "Org Capture" "x" #'org-capture
       :desc "Pop up scratch buffer" "X" #'doom/open-scratch-buffer
@@ -168,14 +182,14 @@
   (global-set-key (kbd "C-z") 'undo))
 
 
-;; 使用类似于mac的窗口管理快捷键管理buffer
+;; 使用类似于 mac 的窗口管理快捷键管理 buffer
 (map!
  :g "s-w"       #'kill-this-buffe
  :g "s-["       #'previous-buffer
  :g "s-]"       #'next-buffer
  )
 
-;;  SPC f f 默认搜索当前buffer所在的目录，这里更改成搜索当前buffer所在的project
+;;  SPC f f 默认搜索当前 buffer 所在的目录，这里更改成搜索当前 buffer 所在的 project
 (map! :leader
       :desc "Find file in project" "f f" #'projectile-find-file)
 
@@ -196,16 +210,21 @@
                                               (find-file (concat +jk/doom-directory "/packages.el")))
       )
 
-;; 打开默认md文件
+;; 打开默认 md 文件
 (defun open-default-markdown-file ()
   "Open a specific Markdown file."
   (interactive)
   (find-file (concat +jk/resources-directory "/md2org.md"))
-  ;; 直接进入insert mode
+  ;; 直接进入 insert mode
   (evil-insert-state)
   )
 (map! :leader
       :desc "Open default markdown file" "o m" #'open-default-markdown-file)
+
+
+;; 绑定打开 bookmark 的按键，doom emacs 中的默认按键为=C-x r b=
+(map! :leader
+      :desc "jump to bookmark" "a b" #'bookmark-jump)
 
 (setq doom-leader-key "C-SPC"
       doom-localleader-key "C-SPC m"
@@ -275,6 +294,68 @@
   (org-element-update-syntax)
   )
 
+(when NOT-ANDROID
+  (use-package! sis
+    :init
+    ;; sis-respect-prefix-and-buffer
+    ;; sis--prefix-override-map-enable
+    (setq sis-prefix-override-keys (list "C-c" "C-x" "C-h" "C-SPC"))
+
+    ;; `C-s/r' 默认优先使用英文 必须在 sis-global-respect-mode 前配置
+    (setq sis-respect-go-english-triggers
+	  (list 'isearch-forward 'isearch-backward)) ; isearch-forward 命令时默认进入 en
+    (setq sis-respect-restore-triggers
+	  (list 'isearch-exit 'isearch-abort)) ; isearch-forward 恢复, isearch-exit `<Enter>', isearch-abor `C-g'
+    :config
+    ;; For MacOS
+    (sis-ism-lazyman-config
+     ;; English input source may be: "ABC", "US" or another one.
+     ;; "com.apple.keylayout.ABC"
+     "com.apple.keylayout.ABC"
+     ;; Other language input source: "rime", "sogou" or another one.
+     ;; "im.rime.inputmethod.Squirrel.Rime"
+     "com.sogou.inputmethod.sogou.pinyin")
+
+    ;; im-select can be used as a drop-in replacement of macism in Microsoft Windows.
+    ;; (sis-ism-lazyman-config "1033" "2052" 'im-select) ; 输入码 1033/英文，2052/中文小狼毫
+
+    ;; enable the /cursor color/ mode 中英文光标颜色模式
+    (sis-global-cursor-color-mode t)
+
+    ;; enable the /respect/ mode buffer 输入法状态记忆模式
+    (sis-global-respect-mode t)
+
+    ;; enable the /inline english/ mode for all buffers
+    ;; (sis-global-inline-mode t) ; 中文输入法状态下，中文后<spc>自动切换英文，结束后自动切回中文
+
+    ;; (global-set-key (kbd "<f9>") 'sis-log-mode) ; 开启日志
+
+    ;; 特殊定制
+    (setq
+     sis-default-cursor-color nil ; 英文光标色
+     ;; sis-default-cursor-color "blue" ; 英文光标色
+     sis-other-cursor-color "#FF2121" ; 中文光标色
+     ;; sis-inline-tighten-head-rule 'all ; 删除头部空格，默认 1，删除一个空格，1/0/'all
+     ;; sis-inline-tighten-tail-rule 'all ; 删除尾部空格，默认 1，删除一个空格，1/0/'all
+     ;; sis-inline-with-english t ; 默认是 t, 中文 context 下输入<spc>进入内联英文
+     ;; sis-inline-with-other t ; 默认是 nil，而且 prog-mode 不建议开启, 英文 context 下输入<spc><spc>进行内联中文
+     )
+
+
+    ;; ;; 特殊 buffer 禁用 sis 前缀,使用 Emacs 原生快捷键  setqsis-prefix-override-buffer-disable-predicates
+    ;; (setq sis-prefix-override-buffer-disable-predicates
+    ;;       (list 'minibufferp
+    ;;             (lambda (buffer) ; magit revision magit 的 keymap 是基于 text property 的，优先级比 sis 更高。进入 magit 后，disable sis 的映射
+    ;;     	  (sis--string-match-p "^magit-revision:" (buffer-name buffer)))
+    ;;             (lambda (buffer) ; special buffer，所有*打头的 buffer，但是不包括*Scratch* *New, *About GNU 等 buffer
+    ;;     	  (and (sis--string-match-p "^\*" (buffer-name buffer))
+    ;;     	       (not (sis--string-match-p "^\*About GNU Emacs" (buffer-name buffer))) ; *About GNU Emacs" 仍可使用 C-h/C-x/C-c 前缀
+    ;;     	       (not (sis--string-match-p "^\*New" (buffer-name buffer)))
+    ;;     	       (not (sis--string-match-p "^\*Scratch" (buffer-name buffer))))))) ; *Scratch*  仍可使用 C-h/C-x/C-c 前缀
+    )
+
+  )
+
 ;; Kicked out of insert mode when typing 'fd' quickly
 ;; https://github.com/doomemacs/doomemacs/issues/1946
 (after! evil-escape
@@ -300,13 +381,19 @@
 (when NOT-ANDROID
   (add-hook! 'window-setup-hook #'treemacs))
 
+(use-package! highlight-parentheses
+  :config
+  (add-hook 'prog-mode-hook #'highlight-parentheses-mode)
+  (add-hook 'minibuffer-setup-hook #'highlight-parentheses-minibuffer-setup)
+  )
+
 (after! org
   ;; 该功能允许在创建到 Org 文件或标题的链接时自动使用 ID。这意味着当你在 Org mode 中创建到另一个 Org 文件或某个特定标题的链接时，会自动生成并使用一个唯一 ID 作为链接的目标，而不是使用文件名和标题。
   (setq org-id-link-to-org-use-id t)
 
   ;; 添加一个设置来确保每次打开 Org 文件时都启用内嵌图片的显示
   ;; 无需每个文件单独设置 #+STARTUP: inlineimages
-  ;; 但是打开这个选项，当attachment中有除了图片以为的附件时，显示会出问题
+  ;; 但是打开这个选项，当 attachment 中有除了图片以为的附件时，显示会出问题
   ;; (setq org-startup-with-inline-images t)
   )
 
@@ -323,15 +410,15 @@
            "* TODO %? \n Creation Time: %u \n %i" :prepend t :clock-in t :clock-resume t :empty-lines-after 2)
           )))
 
-  ;; (setq org-tab-first-hook '(+org-yas-expand-maybe-h
-  ;;                          org-babel-hide-result-toggle-maybe
-  ;;                          org-babel-header-arg-expand
-  ;;                          +org-clear-babel-results-h
-  ;;                          +org-cycle-only-current-subtree-h)'
-  ;;        )
+;; (setq org-tab-first-hook '(+org-yas-expand-maybe-h
+;;                          org-babel-hide-result-toggle-maybe
+;;                          org-babel-header-arg-expand
+;;                          +org-clear-babel-results-h
+;;                          +org-cycle-only-current-subtree-h)'
+;;        )
 
 (after! org
-  ;; .stversions 文件夹是syncthing使用的版本控制和备份文件，不应该加入到agenda中，不然可能造成重复。
+  ;; .stversions 文件夹是 syncthing 使用的版本控制和备份文件，不应该加入到 agenda 中，不然可能造成重复。
   ;; 使用 directory-files-recursively 函数的第三个参数，它是一个正则表达式，用于排除不想包含的文件。但是我们要排除的是一个文件夹里的所有文件，因此需要通过函数改写。
   (defun my/org-agenda-files-exclude-stversions (dir regexp)
     "List all files in DIR that match REGEXP, excluding .stversions directory."
@@ -339,13 +426,14 @@
       (seq-filter (lambda (file)
                     (not (string-match-p "/\\.stversions/" file)))
                   files)))
-  ;; "org$"是用来匹配文件名以"org"结尾的正则表达式，即查找所有Org文件（.org扩展名）
+  ;; "org$"是用来匹配文件名以"org"结尾的正则表达式，即查找所有 Org 文件（.org 扩展名）
   (setq org-agenda-files (my/org-agenda-files-exclude-stversions org-directory "\\.org$"))
 
-  (map! "<f1>" #'org-agenda)
+  ;; (map! "<f1>" #'org-agenda)
 
   ;; The initial value of follow mode in a newly created agenda window.
-  ;; evil 开启的情况下，只有使用jk作为方向键换行的时候才会跟随，使用方向键不会跟随
+  ;; 之前有 bug：evil 开启的情况下，只有使用 jk 作为方向键换行的时候才会跟随，使用方向键不会跟随
+  ;; 现在应该是修复了
   (setq org-agenda-start-with-follow-mode t)
 
   ;; (setq org-stuck-projects '("+TODO=\"PROJ\"/-DONE" ("NEXT" "[-]") nil ""))
@@ -395,7 +483,7 @@
                         (org-agenda-span 1)
                         (org-deadline-warning-days 0)
                         (org-agenda-block-separator ?*)
-                        (org-scheduled-past-days 100000) ;; 显示过去100000天（所有）的计划
+                        (org-scheduled-past-days 100000) ;; 显示过去 100000 天（所有）的计划
                         ;; We don't need the `org-agenda-date-today'
                         ;; highlight because that only has a practical
                         ;; utility in multi-day views.
@@ -425,16 +513,25 @@
 
           ))
 
-  ;; 打开emacs 显示自定义的agenda view
+  (defun +jk/my-org-agenda-daily ()
+    "Daily agenda and top priority tasks."
+    (interactive)
+    (org-agenda nil "A"))
+  (map! :leader
+        :desc "daily agenda" "a a" #'+jk/my-org-agenda-daily)
+
+
+
+  ;; 打开 emacs 显示自定义的 agenda view
   ;; (add-hook 'emacs-startup-hook
   ;;           (lambda ()
   ;;             (org-agenda nil "A")
   ;;             (delete-other-windows)))
 
-  ;; 设置agenda自动显示时间统计报告
+  ;; 设置 agenda 自动显示时间统计报告
   (setq org-agenda-start-with-clockreport-mode t)
 
-  ;; 设置org-agenda-clockreport-mode
+  ;; 设置 org-agenda-clockreport-mode
   (setq org-agenda-clockreport-parameter-plist '(:scope agenda-with-archives :stepskip0 t :link t :maxlevel 3 :fileskip0 t :formula % :hidefiles t))
 
   )
@@ -474,7 +571,7 @@
 
 (after! org
   ;; https://emacs.stackexchange.com/questions/29152/how-to-use-global-tags-list-when-tagging-text-files-with-org-mode-and-helm
-  ;; 设置补全时显示所有agenda文件中的tag
+  ;; 设置补全时显示所有 agenda 文件中的 tag
   (setq org-complete-tags-always-offer-all-agenda-tags t)
 
   ;;default tag list
@@ -492,7 +589,7 @@
   (after! org-roam
     (setq org-roam-directory org-directory)
     (setq org-roam-index-file (concat +jk/org-roam-directory "index.org"))
-    ;; 使org agenda显示.org_archive文件中的todo entry
+    ;; 使 org agenda 显示.org_archive 文件中的 todo entry
     (setq org-agenda-archives-mode t)
     )
 
@@ -509,6 +606,7 @@
           org-roam-ui-open-on-start t))
   )
 
+;; manual: https://github.com/org-roam/org-roam-bibtex/blob/main/doc/orb-manual.org
 (when NOT-ANDROID  ; Check if the system is Mac
   (use-package! org-roam-bibtex
     :after (org-roam)
@@ -518,15 +616,22 @@
              :target
              (file+head "${slug}.org" "#+title: ${title}\n#+date: %U\n")
              :unnarrowed t)
+
             ("c" "contact" plain "\n%?"
              :target
              (file+head "contact/${slug}.org" "#+title: ${title}\n")
              :unnarrowed t)
-            ("r" "bibliography reference" plain
-             "Published by %^{author} in %^{year}.\n\n%?"
+            ("b" "bibliography note with bibtex" plain
+            "Published by =%^{author}= on *%^{journal}%^{volume}%^{booktitle}%^{publisher}* in ~%^{year}~.\n\n* 摘要\n\n%?\n\n* 原文总结\n\n\n\n* 概念\n\n\n\n* 想法\n\n\n\n"
              :target
-             (file+head "paper_notes/${citekey}.org" "#+title: ${title}\n#+date: %U\n")
+             (file+head "paper_notes/${citekey}.org" "#+title: ${title}\n#+note_creation_time: %U\n")
              :unnarrowed t)
+
+            ;; ("b" "bibliography note with bibtex" plain
+            ;;  "Published by =%^{author}= on *%^{journal}%^{volume}%^{booktitle}* in ~%^{year}~.\n\n%?"
+            ;;  :target
+            ;;  (file+head "paper_notes/${citekey}.org" "#+title: ${title}\n#+note_creation_time: %U\n")
+            ;;  :unnarrowed t)
             ))
     :hook (org-roam-mode . org-roam-bibtex-mode)
     :custom
@@ -534,7 +639,7 @@
     :config
     (setq orb-roam-ref-format 'org-ref-v3)
     (setq orb-insert-link-description 'citation-org-ref-3)
-    (setq orb-preformat-keywords '("citekey" "author" "year"))
+    (setq orb-preformat-keywords '("citekey" "author" "year" "journal" "volume" "booktitle" "publisher"))
     )
 
   (map! :leader
@@ -645,23 +750,23 @@
   )
 
 (when NOT-ANDROID
-(after! org
-  (setq org-startup-with-latex-preview t) ; 默认启用LaTeX预览
-  (add-to-list 'org-latex-packages-alist '("" "tcolorbox" t))
-  (add-to-list 'org-latex-packages-alist '("" "amsmath" t))
-  (add-to-list 'org-latex-packages-alist '("" "amsfonts" t))
-  (add-to-list 'org-latex-packages-alist '("" "bm" t))
-  (add-to-list 'org-latex-packages-alist '("" "hyperref" t))
-  (add-to-list 'org-latex-packages-alist '("" "verbatim" t))
-  (add-to-list 'org-latex-packages-alist '("" "array" t))
-  (add-to-list 'org-latex-packages-alist '("" "float" t))
-  (add-to-list 'org-latex-packages-alist '("" "makecell" t))
-  (add-to-list 'org-latex-packages-alist '("" "mathtools" t))
-  (add-to-list 'org-latex-packages-alist '("" "braket" t))
-  (add-to-list 'org-latex-packages-alist '("" "url" t))
-  (add-to-list 'org-latex-packages-alist '("" "subfig" t))
-  )
+  (after! org
+    (setq org-startup-with-latex-preview t) ; 默认启用 LaTeX 预览
+    (add-to-list 'org-latex-packages-alist '("" "tcolorbox" t))
+    (add-to-list 'org-latex-packages-alist '("" "amsmath" t))
+    (add-to-list 'org-latex-packages-alist '("" "amsfonts" t))
+    (add-to-list 'org-latex-packages-alist '("" "bm" t))
+    (add-to-list 'org-latex-packages-alist '("" "hyperref" t))
+    (add-to-list 'org-latex-packages-alist '("" "verbatim" t))
+    (add-to-list 'org-latex-packages-alist '("" "array" t))
+    (add-to-list 'org-latex-packages-alist '("" "float" t))
+    (add-to-list 'org-latex-packages-alist '("" "makecell" t))
+    (add-to-list 'org-latex-packages-alist '("" "mathtools" t))
+    (add-to-list 'org-latex-packages-alist '("" "braket" t))
+    (add-to-list 'org-latex-packages-alist '("" "url" t))
+    (add-to-list 'org-latex-packages-alist '("" "subfig" t))
     )
+  )
 
 ;;Org mode supports inline image previews of LaTeX fragments. These can be toggled with C-c C-x C-l. org-fragtog automates this, so fragment previews are disabled for editing when your cursor steps onto them, and re-enabled when the cursor leaves.
 (use-package! org-fragtog
@@ -685,7 +790,7 @@
   (setq
    org-pomodoro-length 25
    org-pomodoro-short-break-length 5
-   ;; 完成一个时间段后，是否需要人为停止。如果设置了 org-pomodoro-manual-break为true，需要手动运行 org-pomodoro 结束当前周期，进入休息阶段
+   ;; 完成一个时间段后，是否需要人为停止。如果设置了 org-pomodoro-manual-break 为 true，需要手动运行 org-pomodoro 结束当前周期，进入休息阶段
    ;; org-pomodoro-manual-break t
    org-pomodoro-keep-killed-pomodoro-time t
 
@@ -834,13 +939,13 @@ Android port."
 
 ;; https://github.com/jwiegley/alert
 (use-package! alert
-   :config
+  :config
   ;;  (setq alert-default-style 'osx-notifier)
-   (alert-define-style 'android-notifications :title "Android Notifications"
-                    :notifier #'dc/alert-android-notifications-notify)
-   )
+  (alert-define-style 'android-notifications :title "Android Notifications"
+                      :notifier #'dc/alert-android-notifications-notify)
+  )
 
-;; org-alert包本身有bug
+;; org-alert 包本身有 bug
 (use-package! org-alert
   :after (org alert)
   :custom
@@ -860,12 +965,19 @@ Android port."
   ;; Setup notification title (if using 'custom)
   (setq org-alert-notification-title "Org")
 
+  ;; BUG 当同时设置 deadline 和 schedule 时，只提醒匹配到的第一个时间，比如：
+  ;; * TODO Paper title: Transformer In;; terpretability Beyond Attention Visualization
+  ;; DEADLINE: <2024-03-01 Fri 11:20> SCHEDULED: <2024-03-01 Fri 11:10>
+  ;;  Creation Time: [2024-02-28 Wed]
+  ;; 上述的只会在deadline时间提醒
+  ;; IDEA 对仅设置了日期但没有设置时间的item，会产生什么样的行为？
+
   ;; Use non-greedy regular expression
   (setq org-alert-time-match-string
         "\\(?:SCHEDULED\\|DEADLINE\\):.*?<.*?\\([0-9]\\{2\\}:[0-9]\\{2\\}\\).*>")
 
   ;; Enable org-alert
-  ;; BUG 在配置中打开org-alert会导致org mode文件渲染的问题，应该是和org-modern等用来美化org mode的包不兼容
+  ;; BUG 在配置中打开 org-alert 会导致 org mode 文件渲染的问题，应该是和 org-modern 等用来美化 org mode 的包不兼容
   ;; 如果需要的话，尝试手动打开
   ;; 这里设置只在android才默认打开
   (when IS-ANDROID
