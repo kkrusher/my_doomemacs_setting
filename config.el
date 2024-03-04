@@ -147,9 +147,14 @@
 
 (cond
  ;; macOS 系统
- (NOT-ANDROID
+ ((eq system-type 'darwin)
   (setq user-directory "/Users/k/")
-  ;; (setq user-directory "/home/k/")
+  (setq org-directory (concat user-directory "my_org-files/"))
+  (setq +jk/doom-directory (concat user-directory ".config/doom/")))
+
+ ;; Linux 系统
+ ((eq system-type 'gnu/linux)
+  (setq user-directory "/home/k/")
   (setq org-directory (concat user-directory "my_org-files/"))
   (setq +jk/doom-directory (concat user-directory ".config/doom/")))
 
