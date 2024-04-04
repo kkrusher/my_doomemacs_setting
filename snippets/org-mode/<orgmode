@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: #+begin_src org
+# key: <org
+# condition: t
+# --
+#+begin_src org
+`%`$0
+#+end_src

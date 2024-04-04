@@ -82,6 +82,8 @@
 (when NOT-ANDROID
   (package! ivy-bibtex)
   (package! org-fragtog)
+  ;; (package! ox-beamer)
+  ;; (package! async)
   (package! org-roam)
   (package! org-ref)
   (package! org-roam-ui)
@@ -95,6 +97,7 @@
 (unless NOT-ANDROID
   (package! ivy-bibtex :disable t)
   (package! org-fragtog :disable t)
+  ;; (package! ox-latex-async :disable t)
   (package! org-roam :disable t)
   (package! org-ref :disable t)
   (package! org-roam-ui :disable t)

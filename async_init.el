@@ -1,0 +1,10 @@
+(require 'package)
+(setq package-enable-at-startup nil)
+(package-initialize)
+
+(require 'org)
+(require 'ox)
+(require 'cl)
+(require 'ox-beamer)
+(setq org-export-allow-bind-keywords t)
+(setq org-export-async-debug nil)

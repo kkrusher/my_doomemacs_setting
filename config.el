@@ -1,5 +1,5 @@
 ;;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
-;; qwwerasfafq
+
 ;; Place your private configuration here! Remember, you do not need to run 'doom
 ;; sync' after modifying this file!
 
@@ -88,6 +88,10 @@
 ;; You can also try 'gd' (or 'C-c c d') to jump to their definition and see how
 ;; they are implemented.
 
+(set-language-environment "UTF-8")
+(prefer-coding-system 'utf-8)
+
+
 ;; maximize the window on initialization
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
@@ -101,7 +105,7 @@
 (setq mouse-drag-and-drop-region t)
 
 ;; auto-save-mode is somewhat a backup in temporary file named #<file_name>#, auto-save-visited-mode is actually auto save on related file
-(auto-save-visited-mode +1)
+;; (auto-save-visited-mode +1)
 
 ;; load sessions from last leave
 ;; cuurently have bugs, use "SPC q L" instead
@@ -130,20 +134,6 @@
 
 (add-hook 'find-file-hook #'my-enter-evil-insert-state)
 (add-hook 'org-agenda-mode-hook #'my-enter-evil-insert-state)
-
-(defun +jk/convert-markdown-to-org-in-clipboard ()
-  "Convert Markdown text in clipboard to Org format using pandoc and update the clipboard."
-  (interactive)
-  (let ((markdown-text (gui-get-selection 'CLIPBOARD))
-        (org-text nil))
-    (with-temp-buffer
-      (insert markdown-text)
-      (shell-command-on-region (point-min) (point-max) "pandoc -f markdown -t org" (current-buffer) t)
-      (setq org-text (buffer-string)))
-    (gui-set-selection 'CLIPBOARD org-text)))
-
-(map! :leader
-      :desc "pandoc md2org" "a p" #' +jk/convert-markdown-to-org-in-clipboard)
 
 (cond
  ;; macOS 系统
@@ -176,6 +166,72 @@
 (setq +jk/bibtex-file (concat +jk/resources-directory "/MyLibrary.bib"))
 (setq +jk/paper-notes-directory (concat +jk/org-roam-directory "paper_notes/"))
 
+(defun +jk/convert-markdown-to-org-in-clipboard-and-insert ()
+  "Convert Markdown text in clipboard to Org format using pandoc and insert it at point."
+  (interactive)
+  ;; pbpaste 仅适用于macos，如果使用别的系统还需要重新调整
+  ;; 使用pbpaste显示中文乱码
+  ;; (let ((markdown-text (shell-command-to-string "LC_CTYPE=UTF-8 pbpaste"))
+        ;; 使用gui-get-selection在更新emacs29后会报错，目前没有debug
+  ;; (let ((markdown-text (gui-get-selection 'CLIPBOARD))
+  (let ((markdown-text (shell-command-to-string "osascript -e 'get the clipboard'"))
+        (lua-filter-path (concat +jk/doom-directory "remove_custom_id.lua")))
+    (message "Pan")
+    (message "%s" markdown-text)
+
+    ;; AppleScript 会将文本中的换行符转换为 ASCII 字符 \r（回车符），而不是 \n（换行符）。这会导致在 Emacs 中显示时换行符丢失。
+    ;; Replace \r with \n
+    (setq markdown-text (replace-regexp-in-string "\r" "\n" markdown-text))
+    (with-temp-buffer
+      (set-buffer-multibyte t)  ; 确保缓冲区支持多字节字符
+      (insert markdown-text)
+      ;; 在命令行中添加 --wrap=none 选项可以告诉 Pandoc 不要自动换
+      ;; 使用自定义的 Pandoc Lua 过滤器来移除 :CUSTOM_ID: 标签
+      (message "Pandoc command: %s" (format "pandoc -f markdown -t org --wrap=none --lua-filter=%s" lua-filter-path))
+      (shell-command-on-region (point-min) (point-max) (format "pandoc -f markdown -t org --wrap=none --lua-filter=%s" lua-filter-path) (current-buffer) t)
+      ;; 打印临时缓冲区的内容以进行调试
+      ;; (message "Converted Org text: %s" (buffer-string))
+      (setq org-text (buffer-string))
+      )
+    ;; 插入转换后的文本到当前光标处
+    (insert org-text)
+    ;; ;; 删除多余的换行符（如果存在）
+    ;; (unless (eobp)
+    ;; (delete-char -1))
+    ))
+
+(defun +jk/convert-clipboard-to-format-and-insert (format)
+  "Convert text in clipboard to a specified FORMAT using pandoc and insert it at point. FORMAT should be either 'org' or 'latex'."
+  (interactive "sFormat (org/latex): ")
+  (let ((markdown-text (shell-command-to-string "osascript -e 'get the clipboard'"))
+        (lua-filter-path (concat +jk/doom-directory "remove_custom_id.lua"))
+        (target-format (cond ((string= format "org") "org")
+                             ((string= format "latex") "latex")
+                             (t (error "Invalid format specified"))))
+        org-text)
+    (setq markdown-text (replace-regexp-in-string "\r" "\n" markdown-text))
+    (with-temp-buffer
+      (set-buffer-multibyte t)
+      (insert markdown-text)
+      (shell-command-on-region (point-min) (point-max)
+                               (format "pandoc -f markdown -t %s --wrap=none --lua-filter=%s" target-format lua-filter-path)
+                               (current-buffer) t)
+      (setq org-text (buffer-string)))
+    (insert org-text)))
+
+(map! :leader
+      :desc "Convert clipboard to Org (from Markdown)" "a p o" #'(lambda () (interactive) (+jk/convert-clipboard-to-format-and-insert "org"))
+      :desc "Convert clipboard to Latex (from Markdown)"   "a p l" #'(lambda () (interactive) (+jk/convert-clipboard-to-format-and-insert "latex")))
+
+;; (map! :leader
+;;       :desc "pandoc md2org" "a p o" #' +jk/convert-markdown-to-format-and-insert
+;;       )
+
+
+
+;; (map! :leader
+;;       :desc "pandoc md2org" "a p" #' +jk/convert-markdown-to-org-in-clipboard-and-insert)
+
 ;; 因为=org-capture= 使用的比较多，所以对换 doom emacs 设置的两个按键，使用=x=来打开 org capture
 (map! :leader
       :desc "Org Capture" "x" #'org-capture
@@ -189,7 +245,7 @@
 
 ;; 使用类似于 mac 的窗口管理快捷键管理 buffer
 (map!
- :g "s-w"       #'kill-this-buffe
+ :g "s-w"       #'kill-this-buffer
  :g "s-["       #'previous-buffer
  :g "s-]"       #'next-buffer
  )
@@ -252,13 +308,29 @@
 (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
 
 ;; solve the problem of 'Cmd-x raise M-x rather than cut' problem
-;; https://github.com/doomemacs/doomemacs/issues/3860
+;; https://github.com/doomemacs/doomemacs/issues/386
+
+(defun copy-region (beg end)
+  "Copies the text to the kill buffer without deleting the selected region."
+  (interactive "r")
+  (copy-region-as-kill beg end))
+
+(defun paste-region ()
+  "Pastes the text from the kill buffer."
+  (interactive)
+  (yank))
+
+;; 这里 s-v在ubuntu中默认是显示通知列表的快捷键，需要在设置中禁用这个快捷键，才能保证s-v实现粘贴的功能。
 (defun cut-region (beg end)
   "Copies the text to the kill buffer and deletes the selected region."
   (interactive "r")
   (copy-region-as-kill beg end)
   (delete-region beg end))
-(map! "s-x" #'cut-region)
+
+(map!
+      "s-c" #'copy-region
+      "s-v" #'paste-region
+      "s-x" #'cut-region)
 
 ;; 通过启用 visual-line-mode 来实现到达屏幕边缘时自动换行。visual-line-mode 是一个 minor mode，它会根据窗口大小而不是固定的列数来换行。
 ;; (when IS-ANDROID
@@ -280,9 +352,10 @@
 ;; 设置中文字体。 测试： 将 直 言 判
 ;; https://emacs-china.org/t/doom-emacs/23513/8
 (defun my-cjk-font()
-  (let ((font-name (cond (NOT-ANDROID "STKaiti")
+  (let ((font-name (cond ((eq system-type 'darwin) "STKaiti") ; macOS
+                         ((eq system-type 'gnu/linux) "LXGW WenKai") ; Linux
                          (IS-ANDROID "LXGW WenKai")
-                         (t "STKaiti"))))
+                         (t "STKaiti")))) ; 默认字体
     (dolist (charset '(kana han cjk-misc symbol bopomofo))
       (set-fontset-font t charset (font-spec :family font-name)))))
 
@@ -312,14 +385,26 @@
     (setq sis-respect-restore-triggers
 	  (list 'isearch-exit 'isearch-abort)) ; isearch-forward 恢复, isearch-exit `<Enter>', isearch-abor `C-g'
     :config
-    ;; For MacOS
-    (sis-ism-lazyman-config
-     ;; English input source may be: "ABC", "US" or another one.
-     ;; "com.apple.keylayout.ABC"
-     "com.apple.keylayout.ABC"
-     ;; Other language input source: "rime", "sogou" or another one.
-     ;; "im.rime.inputmethod.Squirrel.Rime"
-     "com.sogou.inputmethod.sogou.pinyin")
+    (cond
+     ;; macOS 系统
+     ((string-equal system-type "darwin")
+      (sis-ism-lazyman-config
+       ;; English input source may be: "ABC", "US" or another one.
+       ;; "com.apple.keylayout.ABC"
+       "com.apple.keylayout.ABC"
+       ;; Other language input source: "rime", "sogou" or another one.
+       ;; "im.rime.inputmethod.Squirrel.Rime"
+       "com.sogou.inputmethod.sogou.pinyin"))
+
+     ;; Linux 系统
+     ((string-equal system-type "gnu/linux")
+      (sis-ism-lazyman-config "1" "2" 'fcitx))
+
+     ;; 其他系统，可以根据需要添加更多条件
+     ;; ((string-equal system-type "其他系统类型")
+     ;;  (配置代码))
+     )
+
 
     ;; im-select can be used as a drop-in replacement of macism in Microsoft Windows.
     ;; (sis-ism-lazyman-config "1033" "2052" 'im-select) ; 输入码 1033/英文，2052/中文小狼毫
@@ -361,6 +446,42 @@
 
   )
 
+;; https://github.com/doomemacs/doomemacs/issues/7532
+(add-hook 'doom-after-init-hook (lambda () (tool-bar-mode 1) (tool-bar-mode 0)))
+
+(defun vterm-copy-region (beg end)
+  "Copy region in vterm."
+  (interactive "r")
+  (if (use-region-p)
+      (progn
+        (copy-region-as-kill beg end)
+        (deactivate-mark))
+    (message "No region selected")))
+
+(defun vterm-paste-region ()
+  "Paste in vterm."
+  (interactive)
+  (vterm-yank))
+
+(defun vterm-cut-region (beg end)
+  "Cut region in vterm."
+  (interactive "r")
+  (if (use-region-p)
+      (progn
+        (copy-region-as-kill beg end)
+        (delete-region beg end)
+        (deactivate-mark))
+    (message "No region selected")))
+
+(after! vterm
+  (map! :map vterm-mode-map
+        "s-c" #'vterm-copy-region
+        "s-v" #'vterm-paste-region
+        "s-x" #'vterm-cut-region))
+
+(map! :leader
+      :desc "vterm" "a t" #'vterm)
+
 ;; Kicked out of insert mode when typing 'fd' quickly
 ;; https://github.com/doomemacs/doomemacs/issues/1946
 (after! evil-escape
@@ -378,6 +499,10 @@
   (setq treemacs-tag-follow-mode t)
   ;; Dotfiles will be shown if this is set to t and be hidden otherwise.
   (setq treemacs-show-hidden-files nil)
+
+;; 如果 "Find file in project" （通常绑定到 SPC f f 快捷键）在 Doom Emacs 中列出了已经不存在的文件，这可能是因为项目索引没有更新,你可能需要手动重新生成项目索引。
+(projectile-invalidate-cache nil)
+
   )
 
 ;; start treemacs on emacs startup
@@ -386,11 +511,57 @@
 (when NOT-ANDROID
   (add-hook! 'window-setup-hook #'treemacs))
 
+(after! treemacs
+  ;; (defun +jk/treemacs-open-file (file)
+  ;;   "Open FILE with an external application."
+  ;;   (interactive)
+  ;;   (let ((extension (file-name-extension file)))
+  ;;     (cond
+  ;;      ((string= extension "pdf")
+  ;;         (shell-command (format "open -a Skim.app '%s'" file)))
+  ;;      (t
+  ;;       (treemacs-visit-node-default)))))
+
+  (defun +jk/treemacs-open-file (&rest args)
+    "Open FILE with an external application."
+    (interactive)
+    (let* ((btn (treemacs-current-button))
+           (file (when btn (treemacs-safe-button-get btn :path))))
+      (when file
+        (let ((extension (file-name-extension file)))
+          (cond
+           ((string= extension "pdf")
+            (shell-command (format "open -a Skim.app '%s'" file)))
+           (t
+            (treemacs-visit-node-default)))))))
+
+  (with-eval-after-load 'treemacs
+    ;; (define-key treemacs-mode-map [mouse-1] #'treemacs-single-click-expand-action)
+    (treemacs-define-RET-action 'file-node-open #'+jk/treemacs-open-file)
+    (treemacs-define-RET-action 'file-node-closed #'+jk/treemacs-open-file)
+    (treemacs-define-doubleclick-action 'file-node-open #'+jk/treemacs-open-file)
+    (treemacs-define-doubleclick-action 'file-node-closed #'+jk/treemacs-open-file))
+  )
+
 (use-package! highlight-parentheses
   :config
   (add-hook 'prog-mode-hook #'highlight-parentheses-mode)
   (add-hook 'minibuffer-setup-hook #'highlight-parentheses-minibuffer-setup)
   )
+
+(featurep 'imagemagick)
+
+   (setq image-use-external-converter t)
+
+(after! org-download
+  ;; doom 设置的默认值为"_%Y%m%d_%H%M%S"
+  (setq org-download-timestamp "_%Y%m%d_%H%M%S_")
+  )
+
+(setq jit-lock-chunk-size 1000)  ; 调整为合适的值
+(setq jit-lock-defer-time 0.05)  ; 延迟时间，单位是秒
+
+(setq scroll-preserve-screen-position nil)
 
 (after! org
   ;; 该功能允许在创建到 Org 文件或标题的链接时自动使用 ID。这意味着当你在 Org mode 中创建到另一个 Org 文件或某个特定标题的链接时，会自动生成并使用一个唯一 ID 作为链接的目标，而不是使用文件名和标题。
@@ -425,14 +596,14 @@
 (after! org
   ;; .stversions 文件夹是 syncthing 使用的版本控制和备份文件，不应该加入到 agenda 中，不然可能造成重复。
   ;; 使用 directory-files-recursively 函数的第三个参数，它是一个正则表达式，用于排除不想包含的文件。但是我们要排除的是一个文件夹里的所有文件，因此需要通过函数改写。
-  (defun my/org-agenda-files-exclude-stversions (dir regexp)
+  (defun +jk/org-agenda-files-exclude-stversions (dir regexp)
     "List all files in DIR that match REGEXP, excluding .stversions directory."
     (let ((files (directory-files-recursively dir regexp)))
       (seq-filter (lambda (file)
                     (not (string-match-p "/\\.stversions/" file)))
                   files)))
   ;; "org$"是用来匹配文件名以"org"结尾的正则表达式，即查找所有 Org 文件（.org 扩展名）
-  (setq org-agenda-files (my/org-agenda-files-exclude-stversions org-directory "\\.org$"))
+  (setq org-agenda-files (+jk/org-agenda-files-exclude-stversions org-directory "\\.org$"))
 
   ;; (map! "<f1>" #'org-agenda)
 
@@ -627,7 +798,7 @@
              (file+head "contact/${slug}.org" "#+title: ${title}\n")
              :unnarrowed t)
             ("b" "bibliography note with bibtex" plain
-            "Published by =%^{author}= on *%^{journal}%^{volume}%^{booktitle}%^{publisher}* in ~%^{year}~.\n\n* 摘要\n\n%?\n\n* 原文总结\n\n\n\n* 概念\n\n\n\n* 想法\n\n\n\n"
+             "Published by =%^{author}= on *%^{journal}%^{volume}%^{booktitle}%^{publisher}* in ~%^{year}~.\n\n* 摘要\n\n%?\n\n* 原文总结\n\n\n\n* 概念\n\n\n\n* 想法\n\n\n\n"
              :target
              (file+head "paper_notes/${citekey}.org" "#+title: ${title}\n#+note_creation_time: %U\n")
              :unnarrowed t)
@@ -733,11 +904,6 @@
     )
   )
 
-(after! org-download
-  ;; doom 设置的默认值为"_%Y%m%d_%H%M%S"
-  (setq org-download-timestamp "_%Y%m%d_")
-  )
-
 (after! org
   (setq org-file-apps
         '((remote . emacs)
@@ -757,6 +923,7 @@
 (when NOT-ANDROID
   (after! org
     (setq org-startup-with-latex-preview t) ; 默认启用 LaTeX 预览
+    ;; 设置 LaTeX 导出类
     (add-to-list 'org-latex-packages-alist '("" "tcolorbox" t))
     (add-to-list 'org-latex-packages-alist '("" "amsmath" t))
     (add-to-list 'org-latex-packages-alist '("" "amsfonts" t))
@@ -769,15 +936,90 @@
     (add-to-list 'org-latex-packages-alist '("" "mathtools" t))
     (add-to-list 'org-latex-packages-alist '("" "braket" t))
     (add-to-list 'org-latex-packages-alist '("" "url" t))
-    (add-to-list 'org-latex-packages-alist '("" "subfig" t))
+    (add-to-list 'org-latex-packages-alist '("" "subcaption" t))
+    (add-to-list 'org-latex-packages-alist '("" "listings" t))
+    (add-to-list 'org-latex-packages-alist '("" "color" t))
+    (add-to-list 'org-latex-packages-alist '("" "algorithm" t))
+    (add-to-list 'org-latex-packages-alist '("" "algpseudocode" t))
+    (add-to-list 'org-latex-packages-alist '("" "graphicx" t))
+    (add-to-list 'org-latex-packages-alist '("" "booktabs" t))
+    (add-to-list 'org-latex-packages-alist '("" "xcolor" t))
     )
+
+  ;; update the list of LaTeX classes and associated header (encoding, etc.)
+  ;; and structure
+  (add-to-list 'org-latex-classes
+               `("beamer"
+                 ,(concat "\\documentclass[presentation]{beamer}\n"
+                          "[DEFAULT-PACKAGES]"
+                          "[PACKAGES]"
+                          "[EXTRA]\n")
+                 ("\\section{%s}" . "\\section*{%s}")
+                 ("\\subsection{%s}" . "\\subsection*{%s}")
+                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))
+
+  (setq org-latex-src-block-backend 'listings)
+  ;; fragment 太多的话，会非常慢，所以默认关掉
+  (setq org-startup-with-latex-preview nil)
+
+  ;; 让 #+BIND 选项生效
+  (setq org-export-allow-bind-keywords t)
+
+  ;; 设置默认打开async export 的格式
+  ;; 也就是 =C-c C-e= 打开org-export-dispatch 时默认打开async export 选项
+  (setq org-export-in-background t)
+  ;; 在doomemacs中不能简单使用async_init.el 文件设置org-export-async-init-file，doomemacs已经定义了相关功能
+  ;; https://emacs.stackexchange.com/questions/77581/bind-and-org-mode-asynchronous-exporting-document
+  ;; 处理beamer目前还要加上 (require 'ox-beamer), 不然会报错
+  ;; https://github.com/doomemacs/doomemacs/issues/5768
+  (require 'ox-beamer)
+
+  (add-to-list 'org-file-apps '("\\.pdf\\'" . "open -a Skim.app %s"))
+
   )
 
-;;Org mode supports inline image previews of LaTeX fragments. These can be toggled with C-c C-x C-l. org-fragtog automates this, so fragment previews are disabled for editing when your cursor steps onto them, and re-enabled when the cursor leaves.
-(use-package! org-fragtog
-  :after org
-  :hook (org-mode . org-fragtog-mode))
+(defun +jk/org-get-file-property (property)
+  "Get the value of a file-level property in the current Org buffer."
+  (save-excursion
+    (goto-char (point-min))
+    (when (re-search-forward (format "^#\\+%s: \\(.*\\)$" property) nil t)
+      (match-string 1))))
 
+;; (defun +jk/org-export-to-pdf-based-on-class ()
+;;   "Export the current Org buffer to PDF based on the LATEX_CLASS property."
+;;   (when (and (eq major-mode 'org-mode)
+;;              (string= (+jk/org-get-file-property "AUTO_EXPORT") "t"))
+;;     (let ((latex-class (+jk/org-get-file-property "LATEX_CLASS")))
+;;       (cond
+;;        ((string= latex-class "beamer") (org-beamer-export-to-pdf))
+;;        (t (org-latex-export-to-pdf))))))
+(defun +jk/org-export-to-pdf-based-on-class ()
+  "Export the current Org buffer to PDF based on the LATEX_CLASS property."
+  (message "Try to make PDF...")  ; 打印调试信息
+  (when (and (eq major-mode 'org-mode)
+             (string= (+jk/org-get-file-property "AUTO_EXPORT") "t"))
+    (let ((latex-class (+jk/org-get-file-property "LATEX_CLASS")))
+      (message "Exporting to PDF...")  ; 打印调试信息
+      (message "LATEX_CLASS: %s" latex-class)  ; 打印 LATEX_CLASS 的值
+      (cond
+       ((string= latex-class "beamer")
+        (message "Using Beamer for export.")  ; 打印使用的导出方式
+        (org-beamer-export-to-pdf t)) ;; 参数 t 代表异步导出
+       (t
+        (message "Using default LaTeX for export.")  ; 打印使用的导出方式
+        (org-latex-export-to-pdf t))) ;; 参数 t 代表异步导出
+      (message "Export finished."))))  ; 打印导出完成的信息
+
+
+;; (setq org-latex-pdf-process
+;;       '("latexmk -pdf -f -interaction=nonstopmode -output-directory=%o %f"))
+;; ("latexmk -f -pdf -%latex -interaction=nonstopmode -output-directory=%o %f")
+
+(add-hook 'after-save-hook '+jk/org-export-to-pdf-based-on-class)
+
+;; 在 macOS 中，osascript 是用来执行 AppleScript 脚本的命令行工具，这里调用osascript来输出通知
+;; 如果要改变通知的显示方式，要在设置中设置script editor的通知方式
+;; Script Editor 是 macOS 上的一个应用程序，用于编写和运行 AppleScript 和 JavaScript 脚本。
 (defun send-notification (title message)
   "Send a macOS notification if on a macOS system."
   (when (eq system-type 'darwin)
@@ -785,9 +1027,25 @@
                           message title)))
       (start-process "osascript-send-notification" nil "osascript" "-e" script))))
 
+;; 也可以尝试使用第三方工具terminal-notifier
+;; (defun send-notification (title message)
+;;   "Send a macOS notification using terminal-notifier."
+;;   (when (eq system-type 'darwin)
+;;     (start-process "terminal-notifier"
+;;                    nil
+;;                    "terminal-notifier"
+;;                    "-title" title
+;;                    "-message" message
+;;                    "-activate" "com.apple.Terminal"
+;;                    "-timeout" "0")))
+
 ;; test
 ;; (send-notification "Pomodoro Complete" "Take a break!")
 
+
+(defun current-time-string ()
+  "Return the current time as a string in 'HH:MM' format."
+  (format-time-string "%H:%M"))
 
 (use-package! org-pomodoro
   :after org
@@ -796,7 +1054,7 @@
    org-pomodoro-length 25
    org-pomodoro-short-break-length 5
    ;; 完成一个时间段后，是否需要人为停止。如果设置了 org-pomodoro-manual-break 为 true，需要手动运行 org-pomodoro 结束当前周期，进入休息阶段
-   ;; org-pomodoro-manual-break t
+   org-pomodoro-manual-break t
    org-pomodoro-keep-killed-pomodoro-time t
 
    ;; 下载华为提示音: https://sc.chinaz.com/yinxiao/161008432362.htm
@@ -807,15 +1065,23 @@
    org-pomodoro-short-break-sound (concat +jk/resources-directory "/huawei.wav")
    org-pomodoro-long-break-sound (concat +jk/resources-directory "/huawei.wav")
    )
-  (add-hook 'org-pomodoro-finished-hook
+
+  (add-hook 'org-pomodoro-overtime-hook
             (lambda ()
-              (send-notification "Pomodoro Complete" "Take a break!")))
+              (send-notification "Pomodoro Overtime" (format "It's %s. You should be resting now! Consider taking a break." (current-time-string)))))
+
+  ;; (add-hook 'org-pomodoro-finished-hook
+  ;;           (lambda ()
+  ;;             (send-notification "Pomodoro Finished" (format "It's %s. Time for a break!" (current-time-string)))))
+
   (add-hook 'org-pomodoro-short-break-finished-hook
             (lambda ()
-              (send-notification "Pomodoro Complete" "Short break is finished!")))
+              (send-notification "Short Break Finished" (format "It's %s. Back to work!" (current-time-string)))))
+
   (add-hook 'org-pomodoro-long-break-finished-hook
             (lambda ()
-              (send-notification "Pomodoro Complete" "Long break is finished!")))
+              (send-notification "Long Break Finished" (format "It's %s. Ready for another pomodoro?" (current-time-string)))))
+
   )
 
 ;; be careful
@@ -825,8 +1091,17 @@
 
 (after! org
   (setq org-hide-emphasis-markers t))
-(after! org-appear
-  (setq org-appear-autolinks t ))
+
+(use-package! org-appear
+  :custom
+  (org-appear-autoemphasis  t)
+  (org-appear-autolinks t)
+  ;;(org-appear-autosubmarkers t)
+  :config
+  (add-hook 'org-mode-hook 'org-appear-mode))
+
+;; (after! org-appear
+;;   (setq org-appear-autolinks t ))
 
 (use-package! org-pandoc-import :after org)
 
@@ -851,7 +1126,7 @@
           ("NO"   :inverse-video t :inherit +org-todo-cancel))
         org-modern-footnote
         (cons nil (cadr org-script-display))
-        org-modern-block-fringe nil
+        org-modern-block-fringe t
         org-modern-block-name
         '((t . t)
           ("src" "»" "«")
