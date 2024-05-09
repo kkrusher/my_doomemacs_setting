@@ -139,13 +139,13 @@
  ;; macOS 系统
  ((eq system-type 'darwin)
   (setq user-directory "/Users/k/")
-  (setq org-directory (concat user-directory "my_org-files/"))
+  (setq org-directory (concat user-directory "my-org-files/"))
   (setq +jk/doom-directory (concat user-directory ".config/doom/")))
 
  ;; Linux 系统
  ((eq system-type 'gnu/linux)
   (setq user-directory "/home/k/")
-  (setq org-directory (concat user-directory "my_org-files/"))
+  (setq org-directory (concat user-directory "my-org-files/"))
   (setq +jk/doom-directory (concat user-directory ".config/doom/")))
 
  ;; Android 系统 (android native emacs 而不是 termux 中的)
