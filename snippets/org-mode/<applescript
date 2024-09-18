@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: #+begin_src applescript as
+# key: <as
+# condition: t
+# --
+#+begin_src applescript
+`%`$0
+#+end_src

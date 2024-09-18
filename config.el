@@ -27,10 +27,22 @@
 
 (setq doom-font (font-spec :family "Iosevka SS09" :size (cond (NOT-ANDROID 20)
                                                               (IS-ANDROID 40)
-                                                              (t 20))  :weight 'semi-light)
-      doom-variable-pitch-font (font-spec :family "MesloLGS NF" :size (cond (NOT-ANDROID 20)
-                                                                            (IS-ANDROID 40)
-                                                                            (t 20))))
+                                                              (t 20)) :weight 'semi-light))
+
+;; (setq doom-font (font-spec :family "Iosevka SS09" :size (cond (NOT-ANDROID 30)
+;;                                                               (IS-ANDROID 40)
+;;                                                               (t 20)))
+;;       doom-variable-pitch-font (font-spec :family "MesloLGS NF" :size (cond (NOT-ANDROID 30)
+;;                                                                             (IS-ANDROID 40)
+;;                                                                             (t 20))))
+
+;; (setq doom-font (font-spec :family "Iosevka SS09" :size (cond (NOT-ANDROID 30)
+;;                                                               (IS-ANDROID 40)
+;;                                                               (t 20)))
+;;       doom-variable-pitch-font (font-spec :family "MesloLGS NF" :size (cond (NOT-ANDROID 30)
+;;                                                                             (IS-ANDROID 40)
+;;                                                                             (t 20))))
+
 
 ;; (setq doom-font (font-spec :family "Iosevka SS09" :size 20 :weight 'semi-light)
 ;;       doom-variable-pitch-font (font-spec :family "MesloLGS NF" :size 13))
@@ -315,9 +327,16 @@
   (interactive "r")
   (copy-region-as-kill beg end))
 
+;; (defun paste-region ()
+;;   "Pastes the text from the kill buffer."
+;;   (interactive)
+;;   (yank))
+
 (defun paste-region ()
-  "Pastes the text from the kill buffer."
+  "Pastes the text from the kill buffer, replacing any selected text."
   (interactive)
+  (if (use-region-p)
+      (delete-region (region-beginning) (region-end)))
   (yank))
 
 ;; 这里 s-v在ubuntu中默认是显示通知列表的快捷键，需要在设置中禁用这个快捷键，才能保证s-v实现粘贴的功能。
@@ -500,8 +519,9 @@
   ;; Dotfiles will be shown if this is set to t and be hidden otherwise.
   (setq treemacs-show-hidden-files nil)
 
-;; 如果 "Find file in project" （通常绑定到 SPC f f 快捷键）在 Doom Emacs 中列出了已经不存在的文件，这可能是因为项目索引没有更新,你可能需要手动重新生成项目索引。
-(projectile-invalidate-cache nil)
+  ;; 如果 "Find file in project" （通常绑定到 SPC f f 快捷键）在 Doom Emacs 中列出了已经不存在的文件，这可能是因为项目索引没有更新,你可能需要手动重新生成项目索引。
+  ;; (projectile-invalidate-cache nil)
+  ;; (setq projectile-enable-caching t)
 
   )
 
