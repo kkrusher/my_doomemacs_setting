@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: math-format
+# key: \(
+# group: org-mode formatting
+# --
+\( `%`$1 \)$0

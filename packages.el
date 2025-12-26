@@ -126,3 +126,8 @@
 (package! highlight-parentheses)
 
 (package! golden-ratio)
+
+(package! org-excalidraw
+  :recipe (:host github :repo "wdavew/org-excalidraw"))
+
+(package! csv-mode)

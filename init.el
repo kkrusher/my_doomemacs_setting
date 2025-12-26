@@ -154,7 +154,7 @@
        ;;kotlin            ; a better, slicker Java(Script)
        (:if NOT-ANDROID (latex +latexmk +cdlatex +fold +lsp))
        ;; (latex +lsp)             ; writing papers in Emacs has never been so fun
-       lean              ; for folks with too much to prove
+       ;; lean              ; for folks with too much to prove
        ;;ledger            ; be audit you can be
        lua               ; one-based indices? one-based indices
        (markdown +grip)          ; writing docs for people to ignore
@@ -162,14 +162,14 @@
        ;;nix               ; I hereby declare "nix geht mehr!"
        ;;ocaml             ; an objective camel
        (:if NOT-ANDROID
-           (org +roam2 +pretty +dragndrop +pomodoro +pandoc)
-         (org +pretty +dragndrop +pomodoro +pandoc))
+           (org +roam +dragndrop +pomodoro +pandoc)
+         (org +dragndrop +pomodoro +pandoc))
        ;; (org +pretty +dragndrop +pomodoro +pandoc)               ; organize your plain life in plain text
        ;; (org +roam2 +pretty +dragndrop +pomodoro +pandoc)               ; organize your plain life in plain text
        ;;php               ; perl's insecure younger brother
        ;;plantuml          ; diagrams for confusing people more
        ;;purescript        ; javascript, but functional
-       (:if NOT-ANDROID (python +conda +lsp) )           ; beautiful is better than ugly
+       ;;(:if NOT-ANDROID python )           ; beautiful is better than ugly
        ;;qt                ; the 'cutest' gui framework ever
        ;;racket            ; a DSL for DSLs
        ;;raku              ; the artist formerly known as perl6

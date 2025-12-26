@@ -403,6 +403,8 @@
 	  (list 'isearch-forward 'isearch-backward)) ; isearch-forward 命令时默认进入 en
     (setq sis-respect-restore-triggers
 	  (list 'isearch-exit 'isearch-abort)) ; isearch-forward 恢复, isearch-exit `<Enter>', isearch-abor `C-g'
+
+    (setq sis--context-triggers-adviced t)
     :config
     (cond
      ;; macOS 系统
@@ -450,6 +452,9 @@
      ;; sis-inline-with-other t ; 默认是 nil，而且 prog-mode 不建议开启, 英文 context 下输入<spc><spc>进行内联中文
      )
 
+    ;; 当前默认在org mode的列表中按下cmd+enter添加条目时，会将输入法重置为英文。看到sis源码中sis--context-line有做判断，但是并没有起作用，所以先禁用了
+    ;; (setq sis-context-triggers nil)
+
 
     ;; ;; 特殊 buffer 禁用 sis 前缀,使用 Emacs 原生快捷键  setqsis-prefix-override-buffer-disable-predicates
     ;; (setq sis-prefix-override-buffer-disable-predicates
@@ -464,6 +469,9 @@
     )
 
   )
+
+;; CSV mode should not wrap
+(add-hook! 'csv-mode-hook (toggle-truncate-lines 1))
 
 ;; https://github.com/doomemacs/doomemacs/issues/7532
 (add-hook 'doom-after-init-hook (lambda () (tool-bar-mode 1) (tool-bar-mode 0)))
@@ -597,14 +605,18 @@
   (setq org-capture-templates
         '(("t" "Personal todo" entry
            (file +jk/org-capture-inbox-file)
-           "* TODO %? \n Creation Time: %u \n %i" :prepend t :empty-lines-after 2)
+           "* TODO %^{Title} \nCreation Time: %U \n%?\n" :prepend t :empty-lines-after 2)
           ("r" "To be read" entry
            (file +jk/org-capture-inbox-file)
-           "* TODO Paper title: %?\n Creation Time: %u \n %i \n" :prepend t :empty-lines-after 2)
+           "* TODO Paper title: %^{Title} \nCreation Time: %U \n%?\n" :prepend t :empty-lines-after 2)
           ("i" "Interrupted" entry
            (file +jk/org-capture-inbox-file)
-           "* TODO %? \n Creation Time: %u \n %i" :prepend t :clock-in t :clock-resume t :empty-lines-after 2)
+           "* TODO %^{Title} \nCreation Time: %U \n%?\n" :prepend t :clock-in t :clock-resume t :empty-lines-after 2)
+          ("m" "Meeting Notes" entry
+           (file +jk/org-capture-inbox-file)
+           "* 会议记录： %^{Title|未命名会议} \nCreate Time: %U \n参会人: %^{Participant|未填写} \n%?\n" :prepend t :empty-lines-after 2)
           )))
+;;          )))
 
 ;; (setq org-tab-first-hook '(+org-yas-expand-maybe-h
 ;;                          org-babel-hide-result-toggle-maybe
@@ -627,7 +639,7 @@
 
   ;; (map! "<f1>" #'org-agenda)
 
-  ;; The initial value of follow mode in a newly created agenda window.
+  ;; The initial value of follow mode in a ne   wly created agenda window.
   ;; 之前有 bug：evil 开启的情况下，只有使用 jk 作为方向键换行的时候才会跟随，使用方向键不会跟随
   ;; 现在应该是修复了
   (setq org-agenda-start-with-follow-mode t)
@@ -668,13 +680,14 @@
 
 
           ("A" "Daily agenda and top priority tasks"
-           ((tags-todo "*"
-                       ((org-agenda-skip-function '(org-agenda-skip-if nil '(timestamp)))
-                        (org-agenda-skip-function
-                         `(org-agenda-skip-entry-if
-                           'notregexp ,(format "\\[#%s\\]" (char-to-string org-priority-highest))))
+           ((todo "TODO"
+                       ((org-agenda-skip-function '(org-agenda-skip-entry-if 'scheduled)) ;; 只跳过带有 scheduled 时间戳的条目
+                        ;; ((org-agenda-skip-function '(org-agenda-skip-if nil '(timestamp)))
+                        ;; (org-agenda-skip-function
+                        ;;  `(org-agenda-skip-entry-if
+                        ;;    'notregexp ,(format "\\[#%s\\]" (char-to-string org-priority-highest))))
                         (org-agenda-block-separator nil)
-                        (org-agenda-overriding-header "Important tasks without a date:\n")))
+                        (org-agenda-overriding-header "TODO tasks without a date:\n")))
             (agenda "" ((org-agenda-start-day "+0d")
                         (org-agenda-span 1)
                         (org-deadline-warning-days 0)
@@ -1109,20 +1122,6 @@
 ;; https://github.com/emacs-evil/evil/issues/1623
 (advice-remove 'set-window-buffer #'ad-Advice-set-window-buffer)
 
-(after! org
-  (setq org-hide-emphasis-markers t))
-
-(use-package! org-appear
-  :custom
-  (org-appear-autoemphasis  t)
-  (org-appear-autolinks t)
-  ;;(org-appear-autosubmarkers t)
-  :config
-  (add-hook 'org-mode-hook 'org-appear-mode))
-
-;; (after! org-appear
-;;   (setq org-appear-autolinks t ))
-
 (use-package! org-pandoc-import :after org)
 
 (use-package! org-modern
@@ -1216,6 +1215,14 @@
           :desc "Create a normal card." "n" 'org-fc-type-normal-init
           :desc "Create a cloze card." "c" 'org-fc-type-cloze-init))))
 
+;; (setq +jk/org-excalidraw-directory (concat +jk/resources-directory "excalidraw-files/"))
+
+;; (use-package org-excalidraw
+;;   :after org
+;;   :config
+;;   (org-excalidraw-directory +jk/org-excalidra-directory)
+;; )
+
 (defun dc/alert-android-notifications-notify (info)
   "Send notifications using android-notifications-notify.
 android-notifications-notify is a built-in function in the native Emacs
@@ -1283,3 +1290,17 @@ Android port."
   (when IS-ANDROID
     (org-alert-enable))
   )
+
+;; ============================================================================
+;; 性能优化和监控 (Added for Emacs 29.4 freeze issues)
+;; ============================================================================
+
+;; 加载性能修复
+(load! "performance-fixes")
+
+;; 加载调试工具
+(load! "debug-performance")
+
+;; 启用命令计时器,监控慢命令 (可选,会在 *Messages* 中显示慢命令)
+;; 取消注释下面这行来启用:
+;; (my/enable-command-timer)
